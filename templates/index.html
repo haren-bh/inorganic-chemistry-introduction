@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inorganic Chemistry: Introduction — Rutherford's Gold Leaf Experiment</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="brand-group">
+        <a class="app-brand" href="{{ url_for('index') }}">Inorganic Chemistry: Introduction</a>
+        <span class="badge-era">MANCHESTER • 1909–1911</span>
+        <h1>Rutherford’s Gold Leaf Experiment</h1>
+        <p class="subtitle">
+          Interactive Geiger–Marsden Alpha Particle Scattering Simulation &amp; the Birth of Nuclear Physics
+        </p>
+      </div>
+
+      <nav class="page-nav" aria-label="Sections">
+        <a href="{{ url_for('index') }}" class="nav-link active" aria-current="page">Rutherford &amp; Thomson Experiments</a>
+        <a href="{{ url_for('orbitals') }}" class="nav-link">Atomic Orbitals &amp; Quantum Mechanics</a>
+        <a href="{{ url_for('reactions') }}" class="nav-link">Essential Chemical Reactions</a>
+      </nav>
+
+      <div class="header-controls">
+        <div class="segmented-control" role="group" aria-label="Simulation View Mode">
+          <button type="button" class="seg-btn active" data-view="split">Split View (Macro + Zoom)</button>
+          <button type="button" class="seg-btn" data-view="macro">Apparatus Setup</button>
+          <button type="button" class="seg-btn" data-view="atomic">Subatomic / Field Zoom</button>
+        </div>
+
+        <div class="segmented-control model-toggle" role="group" aria-label="Real Historical Experiment Selection">
+          <button type="button" class="seg-btn active" data-model="rutherford">
+            Rutherford Gold Leaf (1909)
+          </button>
+          <button type="button" class="seg-btn" data-model="thomson_crt">
+            Thomson Cathode Ray Tube (1897)
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-container">
+    <!-- Interactive Simulation Section -->
+    <section class="simulation-workspace" aria-label="Interactive Experiment Animation">
+      <!-- Top Control & Telemetry Ribbon -->
+      <div class="control-bar">
+        <div class="control-group actions-group">
+          <button type="button" id="btn-play-pause" class="btn btn-primary">
+            <span id="play-icon">⏸</span> <span id="play-text">Pause</span>
+          </button>
+          <button type="button" id="btn-fire-burst" class="btn btn-accent" title="Fire a concentrated wave of particles">
+            ⚡ Fire Particle Wave
+          </button>
+          <button type="button" id="btn-fire-headon" class="btn btn-warn" title="Fire an alpha particle aimed directly at the gold nucleus (b ≈ 0)">
+            🎯 Fire Head-On (Backscatter)
+          </button>
+          <button type="button" id="btn-reset" class="btn btn-secondary">
+            ↺ Reset Counts
+          </button>
+        </div>
+
+        <div class="control-group sliders-group">
+          <label class="control-item">
+            <span class="control-label">Target Foil</span>
+            <select id="select-target" class="select-input">
+              {% for key, t in targets.items() %}
+              <option value="{{ key }}" data-z="{{ t.Z }}">{{ t.name }} (Z={{ t.Z }})</option>
+              {% endfor %}
+            </select>
+          </label>
+
+          <label class="control-item">
+            <span class="control-label">α Energy: <strong id="val-energy">5.5</strong> MeV</span>
+            <input type="range" id="slider-energy" min="3.5" max="8.5" step="0.5" value="5.5">
+          </label>
+
+          <label class="control-item">
+            <span class="control-label">Beam Rate: <strong id="val-rate">Medium</strong></span>
+            <input type="range" id="slider-rate" min="1" max="5" step="1" value="3">
+          </label>
+
+          <label class="control-item">
+            <span class="control-label">Microscope Angle: <strong id="val-microscope">25°</strong></span>
+            <input type="range" id="slider-microscope" min="-165" max="165" step="5" value="25">
+          </label>
+        </div>
+
+        <div class="control-group toggles-group">
+          <label class="checkbox-pill">
+            <input type="checkbox" id="toggle-labels" checked>
+            <span>Show Part Labels</span>
+          </label>
+          <label class="checkbox-pill" title="Boosts probability of rare large-angle scattering so backscattering can be observed frequently">
+            <input type="checkbox" id="toggle-exaggerate" checked>
+            <span>Enhance Rare Scattering</span>
+          </label>
+          <label class="checkbox-pill">
+            <input type="checkbox" id="toggle-trails" checked>
+            <span>Show Particle Trails</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Canvas Stage Grid -->
+      <div id="canvas-stage" class="canvas-stage view-split">
+        <!-- Macroscopic Apparatus Panel -->
+        <div class="canvas-card" id="panel-macro">
+          <div class="canvas-header">
+            <div>
+              <span class="panel-tag" id="macro-panel-tag">MACROSCOPIC VIEW • TOP-DOWN SCHEMATIC</span>
+              <h2 id="macro-panel-title">1909 Geiger–Marsden Vacuum Chamber Apparatus</h2>
+            </div>
+            <span class="canvas-hint" id="macro-panel-hint">Click any numbered label ①–⑪ or drag the microscope along the ZnS ring</span>
+          </div>
+          <div class="canvas-wrapper">
+            <canvas id="macro-canvas"></canvas>
+          </div>
+        </div>
+
+        <!-- Subatomic Zoom Panel -->
+        <div class="canvas-card" id="panel-atomic">
+          <div class="canvas-header">
+            <div>
+              <span class="panel-tag" id="atomic-panel-tag">SUBATOMIC SCALE • ~10⁻¹⁴ m ZOOM</span>
+              <h2 id="atomic-panel-title">Gold Leaf Atomic Lattice &amp; Nuclear Coulomb Repulsion</h2>
+            </div>
+            <span class="canvas-hint" id="atomic-model-badge">Experiment: Rutherford α-Scattering (+79e Nucleus)</span>
+          </div>
+          <div class="canvas-wrapper">
+            <canvas id="atomic-canvas"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Telemetry, Histogram & Single-Particle Calculator -->
+      <div class="telemetry-grid">
+        <div class="telemetry-card stats-card">
+          <h3>Live Scintillation Detector Counts</h3>
+          <div class="stat-boxes">
+            <div class="stat-box">
+              <span class="stat-title">Total Emitted</span>
+              <span class="stat-value" id="stat-total">0</span>
+              <span class="stat-sub">Particles</span>
+            </div>
+            <div class="stat-box stat-straight">
+              <span class="stat-title">Undeflected (θ &lt; 2°)</span>
+              <span class="stat-value" id="stat-straight">0</span>
+              <span class="stat-sub" id="pct-straight">0.0% (Pass Straight)</span>
+            </div>
+            <div class="stat-box stat-small">
+              <span class="stat-title">Deflected (2°–90°)</span>
+              <span class="stat-value" id="stat-small">0</span>
+              <span class="stat-sub" id="pct-small">0.0% (Electrostatic Deflection)</span>
+            </div>
+            <div class="stat-box stat-back">
+              <span class="stat-title">Backscattered (θ &gt; 90°)</span>
+              <span class="stat-value" id="stat-back">0</span>
+              <span class="stat-sub" id="pct-back">0.0% (Nuclear Rebound)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="telemetry-card histogram-card">
+          <div class="card-header-inline">
+            <h3>Scattering Angle Distribution N(θ)</h3>
+            <span class="formula-pill">dσ/dΩ ∝ 1 / sin⁴(θ/2)</span>
+          </div>
+          <canvas id="histogram-canvas"></canvas>
+        </div>
+
+        <div class="telemetry-card calculator-card">
+          <div class="card-header-inline">
+            <h3>Single-Particle Trajectory Calculator (Flask API)</h3>
+            <button type="button" id="btn-test-single" class="btn btn-sm btn-accent">Fire Test α</button>
+          </div>
+          <div class="calc-controls">
+            <label class="control-item">
+              <span class="control-label">
+                Impact Parameter (<em>b</em>): <strong id="val-impact">15.0</strong> fm
+              </span>
+              <input type="range" id="slider-impact" min="0" max="120" step="1" value="15">
+            </label>
+          </div>
+          <div class="calc-results" id="calc-results">
+            <div class="calc-metric">
+              <span>Scattering Angle (θ):</span>
+              <strong id="calc-theta">73.8°</strong>
+            </div>
+            <div class="calc-metric">
+              <span>Closest Approach (r<sub>min</sub>):</span>
+              <strong id="calc-rmin">34.5 fm</strong>
+            </div>
+            <div class="calc-metric">
+              <span>Head-On Limit (d<sub>0</sub>):</span>
+              <strong id="calc-d0">41.4 fm</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Static & Interactive Technical Schematic Diagram Section -->
+    <section class="schematic-section" id="schematic-diagram" aria-label="Technical Schematic Diagram of Rutherford's Experiment">
+      <div class="section-heading">
+        <div>
+          <span class="section-eyebrow">TECHNICAL BLUEPRINT &amp; VECTOR DIAGRAM</span>
+          <h2>Schematic Diagram of the Real Experiments</h2>
+          <p>
+            Complete engineering &amp; physics schematic showing Rutherford’s 1909 Gold Leaf Apparatus (left), J.J. Thomson’s 1897 Cathode Ray Tube Experiment that discovered the electron (top right), and Rutherford’s 1911 Subatomic Nuclear Scattering Geometry (bottom right). Click or hover any numbered label ①–⑪ to inspect.
+          </p>
+        </div>
+        <div class="schematic-actions">
+          <div class="segmented-control" role="group" aria-label="Schematic Diagram Theme">
+            <button type="button" class="seg-btn active" data-schematic-theme="blueprint">
+              Blueprint (Dark)
+            </button>
+            <button type="button" class="seg-btn" data-schematic-theme="textbook">
+              Textbook (Light)
+            </button>
+          </div>
+          <button type="button" id="btn-download-svg" class="btn btn-secondary btn-sm">
+            ⬇ Download SVG
+          </button>
+        </div>
+      </div>
+
+      <div class="schematic-card" id="schematic-container" data-theme="blueprint">
+        <svg
+          id="rutherford-schematic-svg"
+          viewBox="0 0 1280 620"
+          xmlns="http://www.w3.org/2000/svg"
+          role="img"
+          aria-labelledby="schematic-title schematic-desc"
+        >
+          <title id="schematic-title">Schematic Diagram of Rutherford's Gold Leaf Experiment and Thomson's Cathode Ray Tube Experiment</title>
+          <desc id="schematic-desc">
+            Detailed labeled technical diagram showing Rutherford's 1909 gold leaf apparatus (lead shield, radioactive alpha source, collimator slit, incident alpha particle beam, ultra-thin gold leaf, circular zinc sulfide fluorescent screen, rotatable viewing microscope, vacuum chamber, undeflected rays, small-angle deflections, and large-angle backscattering), alongside J.J. Thomson's real 1897 Cathode Ray Tube experiment (cathode, anode slits, electric deflection plates, magnetic coils, fluorescent screen) and Rutherford's nuclear Coulomb scattering geometry.
+          </desc>
+
+          <defs>
+            <!-- Technical Blueprint Grid Pattern -->
+            <pattern id="schem-grid" width="24" height="24" patternUnits="userSpaceOnUse">
+              <path d="M 24 0 L 0 0 0 24" fill="none" stroke="currentColor" stroke-width="0.6" class="grid-line" />
+            </pattern>
+
+            <!-- Lead Cross-Hatching Pattern -->
+            <pattern id="lead-hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+              <line x1="0" y1="0" x2="0" y2="8" stroke="#a3a3a3" stroke-width="2" stroke-opacity="0.45" />
+            </pattern>
+
+            <!-- Arrowhead Markers -->
+            <marker id="arrow-cyan" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#38bdf8" />
+            </marker>
+            <marker id="arrow-green" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#22c55e" />
+            </marker>
+            <marker id="arrow-orange" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#fb923c" />
+            </marker>
+            <marker id="arrow-red" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#f43f5e" />
+            </marker>
+            <marker id="arrow-gold" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse">
+              <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#f5c542" />
+            </marker>
+            <marker id="arrow-muted" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+              <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#a3a3a3" />
+            </marker>
+
+            <!-- Radial Glows -->
+            <radialGradient id="nuc-glow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#f5c542" stop-opacity="0.9" />
+              <stop offset="45%" stop-color="#ef4444" stop-opacity="0.45" />
+              <stop offset="100%" stop-color="#ef4444" stop-opacity="0" />
+            </radialGradient>
+            <radialGradient id="scint-glow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#86efac" stop-opacity="1" />
+              <stop offset="50%" stop-color="#22c55e" stop-opacity="0.55" />
+              <stop offset="100%" stop-color="#22c55e" stop-opacity="0" />
+            </radialGradient>
+          </defs>
+
+          <!-- Background Canvas & Grid -->
+          <rect x="0" y="0" width="1280" height="620" class="schem-bg" rx="10" />
+          <rect x="0" y="0" width="1280" height="620" fill="url(#schem-grid)" rx="10" />
+
+          <!-- Panel Divider & Magnification Cone from Gold Foil (430, 320) to Right Inset -->
+          <line x1="735" y1="20" x2="735" y2="600" class="schem-divider" stroke-dasharray="6 6" />
+          <path d="M 435 292 L 758 52 M 435 348 L 758 588" stroke="#f5c542" stroke-width="1.2" stroke-dasharray="4 4" stroke-opacity="0.45" fill="none" />
+
+          <!-- =============================================================== -->
+          <!-- LEFT PANEL: A. MACROSCOPIC EXPERIMENTAL APPARATUS (TOP-DOWN)    -->
+          <!-- =============================================================== -->
+          <text x="28" y="36" class="schem-panel-heading">A. MACROSCOPIC EXPERIMENTAL SETUP (TOP-DOWN SCHEMATIC)</text>
+          <text x="28" y="54" class="schem-panel-sub">Geiger–Marsden Vacuum Scintillation Apparatus (University of Manchester, 1909)</text>
+
+          <!-- 8. Evacuated Vacuum Chamber (Center: 430, 325, R=218) -->
+          <g class="schem-part" data-part-id="vacuum_chamber">
+            <circle cx="430" cy="325" r="218" class="schem-chamber-fill" />
+            <circle cx="430" cy="325" r="218" fill="none" stroke="#737373" stroke-width="2.5" stroke-dasharray="10 6" />
+            <!-- Vacuum Pump Exhaust Port at Bottom Left -->
+            <path d="M 262 465 L 225 502 L 242 518 L 279 481" class="schem-chamber-fill" stroke="#737373" stroke-width="2" />
+            <text x="208" y="535" class="schem-annotation" text-anchor="middle">To Vacuum Pump (P &lt; 10⁻⁴ mmHg)</text>
+            <!-- Beam Entry Port Tunnel -->
+            <rect x="155" y="308" width="95" height="34" class="schem-chamber-fill" stroke="#737373" stroke-width="1.8" />
+          </g>
+
+          <!-- Optical Axis Centerline (0° Reference Line) -->
+          <line x1="95" y1="325" x2="665" y2="325" stroke="#737373" stroke-width="1" stroke-dasharray="5 5" opacity="0.6" />
+
+          <!-- 2. Lead Block Containment Shield -->
+          <g class="schem-part" data-part-id="lead_shield">
+            <rect x="44" y="268" width="112" height="114" rx="5" fill="#2e2e2e" stroke="#a3a3a3" stroke-width="2.5" />
+            <rect x="44" y="268" width="112" height="114" rx="5" fill="url(#lead-hatch)" />
+            <!-- Internal Channel Borehole -->
+            <rect x="88" y="315" width="70" height="20" fill="#141414" stroke="#737373" stroke-width="1" />
+            <text x="100" y="286" class="schem-code-label" text-anchor="middle">Pb Shield</text>
+          </g>
+
+          <!-- 1. Radioactive Alpha Source (Ra / Rn) -->
+          <g class="schem-part" data-part-id="alpha_source">
+            <circle cx="94" cy="325" r="14" fill="url(#nuc-glow)" />
+            <circle cx="94" cy="325" r="7.5" fill="#38bdf8" stroke="#e0f2fe" stroke-width="2" />
+          </g>
+
+          <!-- 3. Lead Collimator Slit (Diaphragm) -->
+          <g class="schem-part" data-part-id="collimator">
+            <!-- Top Jaw -->
+            <rect x="218" y="268" width="14" height="48" rx="2" fill="#555555" stroke="#d4d4d4" stroke-width="1.8" />
+            <!-- Bottom Jaw -->
+            <rect x="218" y="334" width="14" height="48" rx="2" fill="#555555" stroke="#d4d4d4" stroke-width="1.8" />
+            <!-- Diverging rays blocked by collimator -->
+            <line x1="102" y1="322" x2="218" y2="296" stroke="#38bdf8" stroke-width="1.2" stroke-dasharray="3 3" opacity="0.55" />
+            <line x1="102" y1="328" x2="218" y2="354" stroke="#38bdf8" stroke-width="1.2" stroke-dasharray="3 3" opacity="0.55" />
+          </g>
+
+          <!-- 6. Circular Zinc Sulfide (ZnS) Fluorescent Screen (R=176 around 430, 325) -->
+          <g class="schem-part" data-part-id="zns_screen">
+            <!-- Outer structural ring (gap at 180 deg from x=254, y=307..343) -->
+            <path d="M 255 303 A 178 178 0 1 1 255 347" fill="none" stroke="#404040" stroke-width="9" stroke-linecap="round" />
+            <!-- Inner ZnS Phosphor Coating -->
+            <path d="M 258 305 A 174 174 0 1 1 258 345" fill="none" stroke="#22c55e" stroke-width="4" stroke-linecap="round" />
+
+            <!-- Angular Degree Labels around Screen -->
+            <text x="618" y="329" class="schem-deg-text">0°</text>
+            <text x="592" y="226" class="schem-deg-text">30°</text>
+            <text x="526" y="158" class="schem-deg-text">60°</text>
+            <text x="430" y="136" class="schem-deg-text" text-anchor="middle">90°</text>
+            <text x="330" y="158" class="schem-deg-text" text-anchor="end">120°</text>
+            <text x="264" y="226" class="schem-deg-text" text-anchor="end">150°</text>
+            <text x="592" y="430" class="schem-deg-text">30°</text>
+            <text x="526" y="496" class="schem-deg-text">60°</text>
+            <text x="430" y="520" class="schem-deg-text" text-anchor="middle">90°</text>
+            <text x="330" y="496" class="schem-deg-text" text-anchor="end">120°</text>
+            <text x="264" y="430" class="schem-deg-text" text-anchor="end">150°</text>
+          </g>
+
+          <!-- 4. Incident Alpha Particle Beam (He2+) -->
+          <g class="schem-part" data-part-id="alpha_beam">
+            <line x1="102" y1="325" x2="420" y2="325" stroke="#38bdf8" stroke-width="4.5" marker-end="url(#arrow-cyan)" />
+            <circle cx="170" cy="325" r="3.5" fill="#e0f2fe" />
+            <circle cx="285" cy="325" r="3.5" fill="#e0f2fe" />
+            <circle cx="355" cy="325" r="3.5" fill="#e0f2fe" />
+          </g>
+
+          <!-- 9. Undeflected Alpha Particles (theta ≈ 0°, >99%) -->
+          <g class="schem-part" data-part-id="undeflected_beam">
+            <line x1="434" y1="325" x2="598" y2="325" stroke="#22c55e" stroke-width="4.5" marker-end="url(#arrow-green)" />
+            <line x1="434" y1="321" x2="599" y2="317" stroke="#22c55e" stroke-width="1.8" opacity="0.7" />
+            <line x1="434" y1="329" x2="599" y2="333" stroke="#22c55e" stroke-width="1.8" opacity="0.7" />
+            <!-- Scintillation Flash at 0 deg -->
+            <circle cx="604" cy="325" r="14" fill="url(#scint-glow)" />
+            <circle cx="604" cy="325" r="5" fill="#86efac" />
+          </g>
+
+          <!-- 10. Small-Angle Deflected Alpha Particles (1° < theta < 90°) -->
+          <g class="schem-part" data-part-id="small_deflection">
+            <!-- +38 deg ray (hits screen at 430 + 174*cos(38)=567, 325 - 174*sin(38)=218) -->
+            <line x1="430" y1="325" x2="561" y2="222" stroke="#fb923c" stroke-width="2.6" marker-end="url(#arrow-orange)" />
+            <circle cx="567" cy="218" r="11" fill="url(#scint-glow)" />
+            <circle cx="567" cy="218" r="4" fill="#fdba74" />
+
+            <!-- +18 deg ray (hits screen at 595, 271) -->
+            <line x1="430" y1="325" x2="588" y2="273" stroke="#fb923c" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#arrow-orange)" />
+            <circle cx="595" cy="271" r="9" fill="url(#scint-glow)" />
+
+            <!-- -28 deg ray (hits screen at 583, 406) -->
+            <line x1="430" y1="325" x2="577" y2="403" stroke="#fb923c" stroke-width="2.4" marker-end="url(#arrow-orange)" />
+            <circle cx="583" cy="406" r="10" fill="url(#scint-glow)" />
+
+            <!-- Scattering Angle theta Arc (0° to +38°) -->
+            <path d="M 505 325 A 75 75 0 0 0 489 279" fill="none" stroke="#f5c542" stroke-width="1.8" />
+            <text x="518" y="303" class="schem-math-label">θ</text>
+          </g>
+
+          <!-- 11. Large-Angle / Backscattered Alpha Particles (theta > 90°, ~1 in 8,000) -->
+          <g class="schem-part" data-part-id="large_deflection">
+            <!-- +138 deg ray (hits screen at 430 - 129 = 301, 325 - 116 = 209) -->
+            <line x1="430" y1="325" x2="306" y2="214" stroke="#f43f5e" stroke-width="2.6" stroke-dasharray="6 3" marker-end="url(#arrow-red)" />
+            <circle cx="301" cy="209" r="12" fill="url(#scint-glow)" />
+            <circle cx="301" cy="209" r="4.5" fill="#fda4af" />
+
+            <!-- -142 deg ray (hits screen at 293, 432) -->
+            <line x1="430" y1="325" x2="299" y2="427" stroke="#f43f5e" stroke-width="2.6" marker-end="url(#arrow-red)" />
+            <circle cx="293" cy="432" r="12" fill="url(#scint-glow)" />
+            <circle cx="293" cy="432" r="4.5" fill="#fda4af" />
+
+            <!-- Backscatter Angle Arc (0° to -142°) -->
+            <path d="M 468 325 A 38 38 0 0 1 400 348" fill="none" stroke="#f43f5e" stroke-width="1.5" stroke-dasharray="2 2" />
+            <text x="415" y="372" class="schem-math-label" fill="#f43f5e">θ &gt; 90°</text>
+          </g>
+
+          <!-- 5. Ultra-Thin Gold Leaf (Au Foil) at Center (430, 325) -->
+          <g class="schem-part" data-part-id="gold_foil">
+            <line x1="422" y1="286" x2="438" y2="364" stroke="#f5c542" stroke-width="6" stroke-linecap="round" />
+            <circle cx="422" cy="286" r="4.5" fill="#d4d4d4" stroke="#1f1f1f" stroke-width="1.5" />
+            <circle cx="438" cy="364" r="4.5" fill="#d4d4d4" stroke="#1f1f1f" stroke-width="1.5" />
+          </g>
+
+          <!-- 7. Rotatable Viewing Microscope (Positioned at +38 deg, outside screen at 567, 218) -->
+          <g class="schem-part" data-part-id="microscope">
+            <!-- FOV Cone onto ZnS Screen -->
+            <polygon points="567,218 584,200 592,212" fill="#22c55e" fill-opacity="0.28" stroke="#4ade80" stroke-width="1" />
+            <!-- Microscope Barrel -->
+            <line x1="572" y1="214" x2="612" y2="182" stroke="#e5e5e5" stroke-width="12" stroke-linecap="round" />
+            <line x1="572" y1="214" x2="612" y2="182" stroke="#555555" stroke-width="8" stroke-linecap="round" />
+            <!-- Eyepiece -->
+            <circle cx="615" cy="179" r="7" fill="#f5c542" stroke="#1f1f1f" stroke-width="2" />
+            <!-- Rotation Direction Arc -->
+            <path d="M 602 152 A 208 208 0 0 1 632 232" fill="none" stroke="#f5c542" stroke-width="1.6" stroke-dasharray="3 3" marker-start="url(#arrow-gold)" marker-end="url(#arrow-gold)" />
+          </g>
+
+          <!-- =============================================================== -->
+          <!-- NUMBERED CALLOUT BADGES ON MACRO SCHEMATIC (① - ⑪)             -->
+          <!-- =============================================================== -->
+          <!-- ① Alpha Source -->
+          <g class="schem-callout" data-part-id="alpha_source">
+            <line x1="94" y1="312" x2="94" y2="210" class="callout-line" />
+            <rect x="20" y="184" width="168" height="26" rx="13" class="callout-pill" />
+            <circle cx="34" cy="197" r="9" class="callout-num-bg" />
+            <text x="34" y="201" class="callout-num">1</text>
+            <text x="48" y="201" class="callout-text">α-Particle Source (Ra)</text>
+          </g>
+
+          <!-- ② Lead Block Shield -->
+          <g class="schem-callout" data-part-id="lead_shield">
+            <line x1="94" y1="382" x2="94" y2="438" class="callout-line" />
+            <rect x="20" y="438" width="162" height="26" rx="13" class="callout-pill" />
+            <circle cx="34" cy="451" r="9" class="callout-num-bg" />
+            <text x="34" y="455" class="callout-num">2</text>
+            <text x="48" y="455" class="callout-text">Lead Block Shield</text>
+          </g>
+
+          <!-- ③ Lead Collimator Slit -->
+          <g class="schem-callout" data-part-id="collimator">
+            <line x1="225" y1="268" x2="215" y2="142" class="callout-line" />
+            <rect x="130" y="116" width="172" height="26" rx="13" class="callout-pill" />
+            <circle cx="144" cy="129" r="9" class="callout-num-bg" />
+            <text x="144" y="133" class="callout-num">3</text>
+            <text x="158" y="133" class="callout-text">Lead Collimator Slit</text>
+          </g>
+
+          <!-- ④ Incident Alpha Beam -->
+          <g class="schem-callout" data-part-id="alpha_beam">
+            <line x1="335" y1="325" x2="310" y2="395" class="callout-line" />
+            <rect x="220" y="395" width="175" height="26" rx="13" class="callout-pill" />
+            <circle cx="234" cy="408" r="9" class="callout-num-bg" />
+            <text x="234" y="412" class="callout-num">4</text>
+            <text x="248" y="412" class="callout-text">Incident α-Beam (He²⁺)</text>
+          </g>
+
+          <!-- ⑤ Ultra-Thin Gold Leaf -->
+          <g class="schem-callout" data-part-id="gold_foil">
+            <line x1="422" y1="286" x2="412" y2="95" class="callout-line" />
+            <rect x="318" y="69" width="194" height="26" rx="13" class="callout-pill" />
+            <circle cx="332" cy="82" r="9" class="callout-num-bg" />
+            <text x="332" y="86" class="callout-num">5</text>
+            <text x="346" y="86" class="callout-text">Ultra-Thin Gold Leaf (Au)</text>
+          </g>
+
+          <!-- ⑥ Circular ZnS Screen -->
+          <g class="schem-callout" data-part-id="zns_screen">
+            <line x1="515" y1="480" x2="548" y2="562" class="callout-line" />
+            <rect x="454" y="562" width="188" height="26" rx="13" class="callout-pill" />
+            <circle cx="468" cy="575" r="9" class="callout-num-bg" />
+            <text x="468" y="579" class="callout-num">6</text>
+            <text x="482" y="579" class="callout-text">Circular ZnS Screen</text>
+          </g>
+
+          <!-- ⑦ Rotatable Viewing Microscope -->
+          <g class="schem-callout" data-part-id="microscope">
+            <line x1="615" y1="179" x2="630" y2="118" class="callout-line" />
+            <rect x="530" y="92" width="192" height="26" rx="13" class="callout-pill" />
+            <circle cx="544" cy="105" r="9" class="callout-num-bg" />
+            <text x="544" y="109" class="callout-num">7</text>
+            <text x="558" y="109" class="callout-text">Rotatable Microscope</text>
+          </g>
+
+          <!-- ⑧ Evacuated Vacuum Chamber -->
+          <g class="schem-callout" data-part-id="vacuum_chamber">
+            <line x1="255" y1="195" x2="175" y2="85" class="callout-line" />
+            <rect x="75" y="59" width="186" height="26" rx="13" class="callout-pill" />
+            <circle cx="89" cy="72" r="9" class="callout-num-bg" />
+            <text x="89" y="76" class="callout-num">8</text>
+            <text x="103" y="76" class="callout-text">Vacuum Chamber</text>
+          </g>
+
+          <!-- ⑨ Undeflected Alpha Particles -->
+          <g class="schem-callout" data-part-id="undeflected_beam">
+            <line x1="604" y1="325" x2="635" y2="368" class="callout-line" />
+            <rect x="532" y="368" width="192" height="26" rx="13" class="callout-pill" />
+            <circle cx="546" cy="381" r="9" class="callout-num-bg" />
+            <text x="546" y="385" class="callout-num">9</text>
+            <text x="560" y="385" class="callout-text">Undeflected (&gt;99%, θ≈0°)</text>
+          </g>
+
+          <!-- ⑩ Small-Angle Deflection -->
+          <g class="schem-callout" data-part-id="small_deflection">
+            <line x1="583" y1="406" x2="625" y2="468" class="callout-line" />
+            <rect x="525" y="468" width="196" height="26" rx="13" class="callout-pill" />
+            <circle cx="539" cy="481" r="9" class="callout-num-bg" />
+            <text x="539" y="485" class="callout-num">10</text>
+            <text x="556" y="485" class="callout-text">Small Deflection (1°–90°)</text>
+          </g>
+
+          <!-- ⑪ Large-Angle Backscattering -->
+          <g class="schem-callout" data-part-id="large_deflection">
+            <line x1="293" y1="432" x2="345" y2="555" class="callout-line" />
+            <rect x="225" y="555" width="214" height="26" rx="13" class="callout-pill" />
+            <circle cx="239" cy="568" r="9" class="callout-num-bg" />
+            <text x="239" y="572" class="callout-num">11</text>
+            <text x="256" y="572" class="callout-text">Backscattered (~1 in 8,000)</text>
+          </g>
+
+          <!-- =============================================================== -->
+          <!-- RIGHT PANEL: B & C. THOMSON 1897 CRT & RUTHERFORD 1911 NUCLEUS  -->
+          <!-- =============================================================== -->
+          <!-- INSET B: J.J. Thomson's 1897 Cathode Ray Tube Experiment (Real Experiment) -->
+          <g transform="translate(758, 22)">
+            <rect x="0" y="0" width="498" height="198" rx="8" class="schem-inset-box" />
+            <text x="16" y="24" class="schem-panel-heading">B. J.J. THOMSON CATHODE RAY TUBE EXPERIMENT (CAMBRIDGE, 1897)</text>
+            <text x="16" y="41" class="schem-panel-sub">Deflection of cathode rays by E &amp; B fields → Discovery of the Electron (e/m_e = 1.76×10¹¹ C/kg)</text>
+
+            <!-- Evacuated Glass CRT Envelope -->
+            <path d="M 24 98 L 190 98 L 395 62 L 418 62 L 418 178 L 395 178 L 190 142 L 24 142 Z" fill="#38bdf8" fill-opacity="0.06" stroke="#737373" stroke-width="2" />
+
+            <!-- Cathode (-) -->
+            <line x1="44" y1="106" x2="44" y2="134" stroke="#38bdf8" stroke-width="4" stroke-linecap="round" />
+            <text x="44" y="92" class="schem-annotation" fill="#38bdf8" text-anchor="middle">Cathode (−)</text>
+
+            <!-- Anode Collimating Slits (+) -->
+            <line x1="92" y1="101" x2="92" y2="115" stroke="#f5c542" stroke-width="3.5" />
+            <line x1="92" y1="125" x2="92" y2="139" stroke="#f5c542" stroke-width="3.5" />
+            <line x1="122" y1="101" x2="122" y2="115" stroke="#f5c542" stroke-width="3.5" />
+            <line x1="122" y1="125" x2="122" y2="139" stroke="#f5c542" stroke-width="3.5" />
+            <text x="107" y="156" class="schem-annotation" fill="#f5c542" text-anchor="middle">Anode Slits (+)</text>
+
+            <!-- Parallel Electric Deflection Plates (+Top, -Bottom) -->
+            <line x1="175" y1="96" x2="265" y2="96" stroke="#f43f5e" stroke-width="4" />
+            <text x="220" y="86" class="schem-annotation" fill="#fda4af" text-anchor="middle">+ Plate (E ↓)</text>
+            <line x1="175" y1="144" x2="265" y2="144" stroke="#38bdf8" stroke-width="4" />
+            <text x="220" y="160" class="schem-annotation" fill="#38bdf8" text-anchor="middle">− Plate</text>
+
+            <!-- External Magnetic Field Coil (B) -->
+            <circle cx="220" cy="120" r="22" fill="#a78bfa" fill-opacity="0.14" stroke="#a78bfa" stroke-width="1.6" stroke-dasharray="4 3" />
+            <text x="220" y="124" class="schem-code-label" fill="#c4b5fd" text-anchor="middle">B ⊗</text>
+
+            <!-- Balanced Undeflected Electron Ray (F_E = F_B) -->
+            <line x1="46" y1="120" x2="412" y2="120" stroke="#22c55e" stroke-width="2" stroke-dasharray="4 3" marker-end="url(#arrow-green)" />
+            <text x="424" y="123" class="schem-annotation" fill="#4ade80">Balanced (v = E/B)</text>
+
+            <!-- Electrically Deflected Electron Ray (Curving Upward toward + Plate) -->
+            <path d="M 46 120 L 175 120 Q 225 120 265 106 L 410 76" fill="none" stroke="#38bdf8" stroke-width="2.8" marker-end="url(#arrow-cyan)" />
+            <circle cx="415" cy="75" r="8" fill="url(#scint-glow)" />
+            <circle cx="415" cy="75" r="3.5" fill="#86efac" />
+            <text x="424" y="79" class="schem-annotation" fill="#38bdf8">e⁻ Deflected (+)</text>
+
+            <!-- Fluorescent Scale Screen on Right Wall -->
+            <line x1="416" y1="64" x2="416" y2="176" stroke="#22c55e" stroke-width="4" />
+            <text x="355" y="188" class="schem-annotation" fill="#4ade80" text-anchor="middle">Fluorescent Scale Screen</text>
+          </g>
+
+          <!-- INSET C: Rutherford Nuclear Model & Coulomb Scattering Geometry -->
+          <g transform="translate(758, 236)">
+            <rect x="0" y="0" width="498" height="360" rx="8" class="schem-inset-box" />
+            <text x="16" y="25" class="schem-panel-heading">C. RUTHERFORD NUCLEAR ATOM &amp; COULOMB SCATTERING (1911)</text>
+            <text x="16" y="43" class="schem-panel-sub">Compact +79e Gold Nucleus (r ≈ 7.3 fm) surrounded by vast empty space (R ≈ 140,000 fm)</text>
+
+            <!-- Outer Atomic Electron Cloud Boundary (Center: 265, 190, R=118) -->
+            <circle cx="265" cy="190" r="118" fill="#f5c542" fill-opacity="0.04" stroke="#737373" stroke-width="1.5" stroke-dasharray="6 4" />
+            <circle cx="265" cy="190" r="78" fill="none" stroke="#737373" stroke-width="1" stroke-dasharray="3 4" opacity="0.5" />
+
+            <!-- Orbiting Electrons on Boundary -->
+            <circle cx="182" cy="106" r="4" fill="#38bdf8" />
+            <text x="165" y="102" class="schem-annotation" fill="#38bdf8">e⁻</text>
+            <circle cx="348" cy="273" r="4" fill="#38bdf8" />
+            <text x="360" y="278" class="schem-annotation" fill="#38bdf8">e⁻</text>
+            <circle cx="265" cy="72" r="4" fill="#38bdf8" />
+
+            <!-- Nuclear Centerline Axis -->
+            <line x1="25" y1="190" x2="475" y2="190" stroke="#737373" stroke-width="1" stroke-dasharray="4 4" />
+
+            <!-- Trajectory 1: Large impact parameter b (Undeflected, top & bottom) -->
+            <line x1="30" y1="95" x2="465" y2="95" stroke="#22c55e" stroke-width="2.2" marker-end="url(#arrow-green)" />
+            <text x="380" y="86" class="schem-annotation" fill="#4ade80">Large b → Undeflected (θ ≈ 0°)</text>
+
+            <line x1="30" y1="285" x2="465" y2="285" stroke="#22c55e" stroke-width="2.2" marker-end="url(#arrow-green)" />
+
+            <!-- Trajectory 2: Medium impact parameter b (Hyperbolic Small/Moderate Deflection) -->
+            <line x1="30" y1="152" x2="295" y2="152" stroke="#a3a3a3" stroke-width="1" stroke-dasharray="3 3" />
+            <path d="M 30 152 Q 245 152 385 68" fill="none" stroke="#fb923c" stroke-width="2.6" marker-end="url(#arrow-orange)" />
+
+            <!-- Impact Parameter b Dimension Arrow (between y=190 and y=152) -->
+            <line x1="82" y1="152" x2="82" y2="190" stroke="#f5c542" stroke-width="1.6" marker-start="url(#arrow-gold)" marker-end="url(#arrow-gold)" />
+            <text x="90" y="175" class="schem-math-label">b (Impact Parameter)</text>
+
+            <!-- Scattering Angle theta Arc in Inset C -->
+            <path d="M 285 152 A 42 42 0 0 0 278 130" fill="none" stroke="#f5c542" stroke-width="1.6" />
+            <text x="295" y="143" class="schem-math-label">θ</text>
+
+            <!-- Trajectory 3: Small impact parameter b -> 0 (Head-on / Large-Angle Backscatter) -->
+            <path d="M 30 198 C 215 198, 228 202, 75 256" fill="none" stroke="#f43f5e" stroke-width="2.8" marker-end="url(#arrow-red)" />
+            <text x="36" y="270" class="schem-annotation" fill="#fda4af">Small b → Backscattered (θ &gt; 90°)</text>
+
+            <!-- Closest Approach r_min annotation -->
+            <line x1="212" y1="202" x2="265" y2="190" stroke="#f43f5e" stroke-width="1.3" stroke-dasharray="2 2" />
+            <text x="215" y="220" class="schem-annotation" fill="#fda4af">r_min</text>
+
+            <!-- Central Dense Gold Nucleus (+79e) -->
+            <circle cx="265" cy="190" r="24" fill="url(#nuc-glow)" />
+            <circle cx="265" cy="190" r="10" fill="#f5c542" stroke="#fef08a" stroke-width="2" />
+            <text x="282" y="186" class="schem-code-label" fill="#f5c542">Au Nucleus (+79e)</text>
+            <text x="282" y="201" class="schem-annotation">&gt;99.9% of mass</text>
+
+            <!-- Rutherford Formula Box at Bottom of Inset C -->
+            <rect x="16" y="312" width="466" height="36" rx="6" class="schem-formula-box" />
+            <text x="249" y="335" class="schem-formula-text" text-anchor="middle">
+              Rutherford Law:  tan(θ/2) = (Z₁Z₂e²) / (4πε₀ · E_α · b)   •   Differential Cross-Section: dσ/dΩ ∝ 1 / sin⁴(θ/2)
+            </text>
+          </g>
+        </svg>
+      </div>
+    </section>
+
+    <!-- Labeled Apparatus Parts Interactive Directory -->
+    <section class="labeled-parts-section" id="labeled-parts">
+      <div class="section-heading">
+        <div>
+          <span class="section-eyebrow">INTERACTIVE DIAGRAM LEGEND</span>
+          <h2>All Important Labeled Parts of the Experiment</h2>
+          <p>
+            Hover over or click any component below to spotlight its exact location and function inside the animated apparatus above.
+          </p>
+        </div>
+        <button type="button" id="btn-clear-highlight" class="btn btn-secondary btn-sm">
+          Show All Equally
+        </button>
+      </div>
+
+      <div class="parts-grid">
+        {% for part in parts %}
+        <article class="part-card" data-part-id="{{ part.id }}" tabindex="0">
+          <div class="part-card-top">
+            <span class="part-number">{{ part.number }}</span>
+            <div>
+              <span class="part-category">{{ part.category }}</span>
+              <h3>{{ part.name }}</h3>
+            </div>
+          </div>
+          <p>{{ part.description }}</p>
+        </article>
+        {% endfor %}
+      </div>
+    </section>
+
+    <!-- Detailed Explanations: Setup, Results, and How It Changed Physics -->
+    <section class="explanations-section" aria-label="Scientific Explanation of Rutherford's Experiment">
+      <div class="section-heading">
+        <div>
+          <span class="section-eyebrow">PHYSICS &amp; HISTORICAL SIGNIFICANCE</span>
+          <h2>Understanding Rutherford’s Gold Foil Experiment</h2>
+          <p>
+            How a beam of alpha particles and a sheet of gold leaf revealed the atomic nucleus, complementing J.J. Thomson’s 1897 cathode ray discovery of the electron.
+          </p>
+        </div>
+      </div>
+
+      <div class="explanation-pillars">
+        <!-- Pillar 1: The Experimental Setup -->
+        <article class="pillar-card">
+          <div class="pillar-header">
+            <span class="pillar-index">01</span>
+            <div>
+              <span class="pillar-subtitle">APPARATUS &amp; METHODOLOGY</span>
+              <h3>The Experimental Setup</h3>
+            </div>
+          </div>
+
+          <p class="pillar-lead">
+            Between 1908 and 1910 at the University of Manchester, physicist <strong>Ernest Rutherford</strong> instructed his colleague <strong>Hans Geiger</strong> and undergraduate student <strong>Ernest Marsden</strong> to probe atomic structure by firing high-speed alpha particles at ultra-thin metal foils.
+          </p>
+
+          <ul class="detail-list">
+            <li>
+              <strong>Radioactive Alpha (α) Source:</strong> A sample of radium or radon enclosed in a thick <strong>lead block shield</strong> emitted alpha particles (He<sup>2+</sup> nuclei with charge +2<em>e</em> and mass 4 u) at speeds of ≈ 1.5 × 10<sup>7</sup> m/s (~5% the speed of light).
+            </li>
+            <li>
+              <strong>Lead Collimator Slit:</strong> A narrow aperture in a lead plate absorbed diverging radiation and collimated the escaping alpha particles into a tight, pencil-thin parallel beam.
+            </li>
+            <li>
+              <strong>Ultra-Thin Gold Leaf (Au Foil):</strong> Gold was chosen for its extraordinary malleability, allowing it to be beaten into a foil just <strong>4 × 10<sup>−5</sup> cm (≈ 400 nm) thick</strong>—roughly 1,000 atomic layers—so alpha particles could penetrate without being stopped.
+            </li>
+            <li>
+              <strong>Circular ZnS Scintillation Screen &amp; Microscope:</strong> Surrounding the foil was a circular screen coated with <strong>zinc sulfide (ZnS)</strong>. Whenever an alpha particle struck the screen, it produced a microscopic flash of green light (a <em>scintillation</em>), counted in a pitch-dark room through a <strong>rotatable microscope</strong>.
+            </li>
+            <li>
+              <strong>Evacuated Vacuum Chamber:</strong> The entire apparatus was sealed inside an air-free vacuum chamber so alpha particles would not collide with nitrogen or oxygen molecules before reaching the detector.
+            </li>
+          </ul>
+        </article>
+
+        <!-- Pillar 2: The Results -->
+        <article class="pillar-card">
+          <div class="pillar-header">
+            <span class="pillar-index">02</span>
+            <div>
+              <span class="pillar-subtitle">EXPERIMENTAL MEASUREMENTS</span>
+              <h3>Experimental Results</h3>
+            </div>
+          </div>
+
+          <p class="pillar-lead">
+            Earlier in 1897, <strong>J.J. Thomson’s Cathode Ray Tube Experiment</strong> had proven that atoms contain lightweight, negatively charged electrons (<em>e</em><sup>−</sup>). When Geiger and Marsden fired heavy, positively charged alpha particles at gold leaf, they recorded three landmark observations:
+          </p>
+
+          <div class="results-breakdown">
+            <div class="result-item result-pass">
+              <div class="result-badge">&gt; 99%</div>
+              <div>
+                <h4>1. Undeflected Transmission (θ ≈ 0°)</h4>
+                <p>
+                  The vast majority of alpha particles passed straight through the gold leaf with virtually zero deflection. <strong>Conclusion:</strong> The atom is overwhelmingly composed of <em>empty space</em>.
+                </p>
+              </div>
+            </div>
+
+            <div class="result-item result-deflect">
+              <div class="result-badge">~ 0.99%</div>
+              <div>
+                <h4>2. Small- to Moderate-Angle Deflections (1° &lt; θ &lt; 90°)</h4>
+                <p>
+                  A small fraction deflected by several degrees due to strong electrostatic (Coulomb) repulsion when passing near a concentrated positive charge center.
+                </p>
+              </div>
+            </div>
+
+            <div class="result-item result-backscatter">
+              <div class="result-badge">~ 1 in 8,000</div>
+              <div>
+                <h4>3. Large-Angle Backscattering (θ &gt; 90°, up to 180°)</h4>
+                <p>
+                  To everyone’s astonishment, roughly <strong>1 in 8,000 alpha particles</strong> rebounded backward toward the source. Only an encounter with an extraordinarily dense, massive, positively charged core could reverse a speeding He<sup>2+</sup> projectile.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <blockquote class="rutherford-quote">
+            “It was quite the most incredible event that has ever happened to me in my life. It was almost as incredible as if you fired a 15-inch artillery shell at a piece of tissue paper and it came back and hit you.”
+            <footer>— Ernest Rutherford</footer>
+          </blockquote>
+        </article>
+
+        <!-- Pillar 3: How It Changed Physics -->
+        <article class="pillar-card">
+          <div class="pillar-header">
+            <span class="pillar-index">03</span>
+            <div>
+              <span class="pillar-subtitle">PARADIGM SHIFT IN SCIENCE</span>
+              <h3>How It Changed Physics</h3>
+            </div>
+          </div>
+
+          <p class="pillar-lead">
+            In May 1911, Rutherford published his landmark paper deriving the exact mathematical law of Coulomb scattering and establishing the <strong>Nuclear Structure of the Atom</strong>, transforming physics forever:
+          </p>
+
+          <ul class="detail-list">
+            <li>
+              <strong>Discovery of the Atomic Nucleus:</strong> Rutherford proved that over 99.9% of an atom’s mass and all of its positive charge (+<em>Ze</em>) are packed into a central nucleus of radius ~10<sup>−14</sup> m—roughly <strong>10,000 to 100,000 times smaller</strong> than the diameter of the atom (~10<sup>−10</sup> m).
+            </li>
+            <li>
+              <strong>Completing the Subatomic Picture (with Thomson’s 1897 CRT):</strong> Combined J.J. Thomson’s experimental discovery of the negative electron (1897) with Rutherford’s experimental discovery of the positive nucleus (1911) into a unified nuclear architecture.
+            </li>
+            <li>
+              <strong>Catalyst for Quantum Mechanics (Bohr &amp; Schrödinger):</strong> Classical Maxwellian electromagnetism predicted that orbiting electrons would radiate energy continuously and spiral into Rutherford’s nucleus in ~10<sup>−11</sup> seconds. Resolving this instability crisis led directly to <strong>Niels Bohr’s quantized orbitals (1913)</strong> and <strong>Erwin Schrödinger’s wave equation (1926)</strong>.
+            </li>
+            <li>
+              <strong>Birth of Nuclear &amp; Particle Physics:</strong> Pioneered scattering cross-section analysis (dσ/dΩ ∝ csc<sup>4</sup>(θ/2)) as the universal tool for probing invisible subatomic structure—directly inspiring the discovery of the proton (1919), the neutron (1932), and quarks via deep inelastic scattering (1968).
+            </li>
+          </ul>
+        </article>
+      </div>
+
+      <!-- Comparison Table: Real Experiments (Thomson 1897 CRT vs Rutherford 1909 Gold Leaf) -->
+      <div class="comparison-table-card">
+        <h3>Comparison of Real Landmark Experiments: J.J. Thomson (1897) vs. Ernest Rutherford (1909–1911)</h3>
+        <div class="table-scroll">
+          <table class="comparison-table">
+            <thead>
+              <tr>
+                <th>Experimental Aspect</th>
+                <th>J.J. Thomson’s Cathode Ray Tube Experiment (1897)</th>
+                <th>Rutherford’s Gold Leaf (Geiger–Marsden) Experiment (1909)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Laboratory &amp; Researchers</strong></td>
+                <td>Cavendish Laboratory, Cambridge (J.J. Thomson)</td>
+                <td>University of Manchester (E. Rutherford, H. Geiger, E. Marsden)</td>
+              </tr>
+              <tr>
+                <td><strong>Apparatus Used</strong></td>
+                <td>Evacuated glass cathode ray tube with anode slits, parallel electric plates (<strong>E</strong>), and Helmholtz magnetic coils (<strong>B</strong>)</td>
+                <td>Evacuated chamber with lead-collimated radium α-source, 400 nm gold leaf target, circular ZnS screen, and rotatable microscope</td>
+              </tr>
+              <tr>
+                <td><strong>Beam / Projectile</strong></td>
+                <td>Cathode rays (stream of negatively charged electrons, <em>e</em><sup>−</sup>)</td>
+                <td>Alpha particles (He<sup>2+</sup> nuclei, charge +2<em>e</em>, speed ~1.5 × 10<sup>7</sup> m/s)</td>
+              </tr>
+              <tr>
+                <td><strong>Key Experimental Observation</strong></td>
+                <td>Beam deflected toward the positive electric plate (+) and curved in a magnetic field, independent of cathode metal or gas</td>
+                <td>&gt;99% passed straight through gold foil, small fraction deflected slightly, ~1 in 8,000 rebounded backward at θ &gt; 90°</td>
+              </tr>
+              <tr>
+                <td><strong>Fundamental Discovery</strong></td>
+                <td><strong>Discovery of the Electron (<em>e</em><sup>−</sup>)</strong> &amp; measurement of charge-to-mass ratio (<em>e</em>/<em>m<sub>e</sub></em> = 1.76 × 10<sup>11</sup> C/kg)</td>
+                <td><strong>Discovery of the Atomic Nucleus (+<em>Ze</em>)</strong> containing &gt;99.9% of atomic mass within radius ~10<sup>−14</sup> m</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="orbitals-teaser" aria-label="Next: Atomic Orbitals">
+      <div>
+        <span class="section-eyebrow">NEXT CHAPTER · 1926 →</span>
+        <h2>From Rutherford’s nucleus to quantum orbitals</h2>
+        <p>
+          Rutherford found the tiny nucleus — but where are the electrons, and why don’t they spiral into it? Solve Schrödinger’s equation step by step,
+          explore s, p, d, f orbitals in interactive 3D, and build the electron configuration of all 118 elements.
+        </p>
+      </div>
+      <a class="btn btn-primary" href="{{ url_for('orbitals') }}">Explore Atomic Orbitals →</a>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      Inorganic Chemistry: Introduction • Rutherford Gold Leaf &amp; Thomson Cathode Ray Experiments • Built with Flask &amp; HTML5 Canvas
+    </p>
+  </footer>
+
+  <script>
+    window.EXPERIMENT_PARTS = {{ parts | tojson }};
+    window.TARGET_ELEMENTS = {{ targets | tojson }};
+  </script>
+  <script src="{{ url_for('static', filename='js/simulation.js') }}"></script>
+</body>
+</html>

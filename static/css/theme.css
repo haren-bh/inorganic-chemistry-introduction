@@ -1,0 +1,312 @@
+/* ==========================================================================
+   Inorganic Chemistry: Introduction — Gray & White Theme
+   Loaded LAST on every page. Page chrome is white / light gray with charcoal
+   accents; animation canvases, the 3D orbital viewer and the blueprint schematic
+   are rendered as neutral charcoal "instrument screens".
+   ========================================================================== */
+
+:root {
+  --bg-base: #f3f4f6;
+  --bg-surface: #ffffff;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f9fafb;
+  --bg-elevated: #e5e7eb;
+  --border-subtle: rgba(17, 24, 39, 0.12);
+  --border-highlight: rgba(55, 65, 81, 0.45);
+
+  --text-primary: #111827;
+  --text-secondary: #374151;
+  --text-muted: #6b7280;
+
+  /* Chrome accents are charcoal grays; scientific colours stay but are deepened for contrast on white */
+  --accent-gold: #374151;
+  --accent-gold-soft: rgba(55, 65, 81, 0.08);
+  --accent-alpha: #0369a1;
+  --accent-scintillation: #15803d;
+  --accent-deflect: #c2410c;
+  --accent-backscatter: #be123c;
+  --accent-purple: #6d28d9;
+
+  --shadow-card: 0 1px 2px rgba(17, 24, 39, 0.05), 0 10px 24px -14px rgba(17, 24, 39, 0.22);
+
+  --screen-bg: #1f1f1f;
+  --screen-bg-2: #2a2a2a;
+  --screen-text: #e5e5e5;
+}
+
+html,
+body,
+.reactions-page,
+.orbitals-page {
+  background-color: #f3f4f6;
+  background-image: none;
+  color: var(--text-primary);
+}
+
+/* ---------- Application brand (shown above every page title) ---------- */
+.app-brand {
+  display: flex;
+  inline-size: fit-content;
+  align-items: center;
+  gap: 0.5rem;
+  margin-block-end: 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #111827;
+  text-decoration: none;
+}
+
+.app-brand::before {
+  content: "";
+  inline-size: 0.7rem;
+  block-size: 0.7rem;
+  border-radius: 3px;
+  background: linear-gradient(135deg, #6b7280, #111827);
+}
+
+.app-brand:hover {
+  color: #4b5563;
+}
+
+.site-header {
+  background: rgba(255, 255, 255, 0.94);
+  border-block-end: 1px solid #e5e7eb;
+  box-shadow: 0 1px 0 rgba(17, 24, 39, 0.03);
+}
+
+.badge-era {
+  color: #374151 !important;
+  background: #f3f4f6 !important;
+  border-color: #d1d5db !important;
+}
+
+/* ---------- Navigation & segmented controls ---------- */
+.page-nav,
+.segmented-control {
+  background: #f3f4f6;
+  border-color: #e5e7eb;
+}
+
+.nav-link.active {
+  background: #374151;
+  color: #ffffff;
+}
+
+.seg-btn.active {
+  background: #ffffff;
+  color: #111827;
+  box-shadow: 0 1px 3px rgba(17, 24, 39, 0.14);
+}
+
+.model-toggle .seg-btn.active[data-model="thomson_crt"] {
+  color: #4b5563;
+}
+
+/* ---------- Buttons ---------- */
+.btn-primary {
+  background: #374151;
+  color: #ffffff;
+  border-color: #374151;
+}
+
+.btn-primary:hover {
+  background: #1f2937;
+  filter: none;
+}
+
+.btn-accent {
+  background: #ffffff;
+  color: #111827;
+  border: 1px solid #9ca3af;
+}
+
+.btn-accent:hover {
+  background: #f3f4f6;
+  box-shadow: none;
+}
+
+.btn-secondary {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.btn-sim-rxn {
+  background: #ffffff;
+  color: #1f2937;
+  border-color: #9ca3af;
+}
+
+.btn-sim-rxn:hover,
+.btn-table-sim:hover {
+  background: #374151;
+  color: #ffffff;
+  border-color: #374151;
+}
+
+.btn-table-sim {
+  background: #f3f4f6;
+  color: #1f2937;
+  border-color: #d1d5db;
+}
+
+.btn-mini:hover {
+  border-color: #6b7280;
+  color: #111827;
+}
+
+input[type="range"] {
+  accent-color: #4b5563;
+}
+
+/* ---------- Charcoal "instrument screens" for all animation canvases ---------- */
+#histogram-canvas,
+.step-visual canvas,
+.graph-canvas {
+  background: var(--screen-bg);
+  border-color: #3f3f46;
+}
+
+.canvas-wrapper {
+  background: radial-gradient(circle at center, #2a2a2a 0%, #171717 100%);
+}
+
+.viewer-stage {
+  background: #171717;
+}
+
+.viewer-hud,
+.viewer-overlay,
+.viewer-fallback {
+  color: var(--screen-text);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+#wb-canvas,
+.inline-lab-canvas {
+  background: radial-gradient(circle at 50% 35%, #2b2b2b 0%, #1a1a1a 75%, #121212 100%);
+  border-color: #3f3f46;
+  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.45);
+}
+
+.chem-visual-row {
+  background: radial-gradient(circle at 50% 50%, #3a3a3a, #1c1c1c);
+}
+
+.sw-node {
+  background: #e5e7eb;
+  border: 1px solid #6b7280;
+}
+
+/* ---------- Reactions page tweaks ---------- */
+.lab-workbench-section {
+  background: #ffffff;
+  border-color: #d1d5db;
+  box-shadow: var(--shadow-card);
+}
+
+.wb-equation-bar,
+.eq-row {
+  background: #f9fafb;
+  border-color: #e5e7eb;
+}
+
+.eq-row.eq-primary {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+}
+
+.rxn-card,
+.sidebar-card,
+.catalog-toolbar,
+.canonical-table-wrap,
+.cat-section-header {
+  background: #ffffff;
+  box-shadow: var(--shadow-card);
+}
+
+.rxn-card:hover,
+.rxn-card.active-sim {
+  border-color: #6b7280;
+}
+
+.rxn-card.active-sim {
+  box-shadow: 0 0 0 2px rgba(55, 65, 81, 0.25), var(--shadow-card);
+}
+
+.ribbon-pill.active,
+.sidebar-cat-btn.active,
+.filter-chip.active {
+  background: #374151;
+  border-color: #374151;
+  color: #ffffff;
+}
+
+.ribbon-pill.active .pill-count,
+.sidebar-cat-btn.active .cat-badge-count {
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
+
+.sidebar-cat-btn.active .cat-btn-text small {
+  color: #d1d5db;
+}
+
+.category-ribbon-wrap {
+  background: rgba(249, 250, 251, 0.96);
+  border-top-color: #e5e7eb;
+}
+
+.rxn-num-badge {
+  background: #374151;
+  color: #ffffff;
+  border-color: #374151;
+}
+
+.telemetry-card .tel-value,
+.obs-header,
+.pane-label,
+.workbench-eyebrow,
+.inline-drawer-title,
+.results-counter strong {
+  color: #374151;
+}
+
+.rxn-explain-pane {
+  background: #f9fafb;
+  border-left-color: #6b7280;
+}
+
+.canonical-table th {
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
+.chem-pubchem-img {
+  border: 1px solid #d1d5db;
+}
+
+/* ---------- Orbitals page tweaks ---------- */
+.pt-cell.selected {
+  border-color: #111827;
+}
+
+.tooltip,
+.orb-tooltip {
+  color: var(--text-primary);
+}
+
+/* ---------- Final polish: neutral pills, no-wrap scrubber labels ---------- */
+.wb-instrument-tag,
+.rxn-apparatus-pill {
+  background: #f3f4f6;
+  color: #1f2937;
+  border-color: #d1d5db;
+}
+
+.scrubber-group label,
+.scrubber-group span {
+  white-space: nowrap;
+}

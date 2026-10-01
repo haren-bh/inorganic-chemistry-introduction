@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inorganic Chemistry: Introduction — Atomic Orbitals &amp; Quantum Mechanics</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/orbitals.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body class="orbitals-page">
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="brand-group">
+        <a class="app-brand" href="{{ url_for('index') }}">Inorganic Chemistry: Introduction</a>
+        <span class="badge-era">SCHRÖDINGER • 1926 → TODAY</span>
+        <h1>Atomic Orbitals &amp; Quantum Mechanics</h1>
+        <p class="subtitle">From Schrödinger’s equation to s, p, d, f orbitals and the electron configurations of all 118 elements</p>
+      </div>
+      <nav class="page-nav" aria-label="Sections">
+        <a href="{{ url_for('index') }}" class="nav-link">Rutherford &amp; Thomson Experiments</a>
+        <a href="{{ url_for('orbitals') }}" class="nav-link active" aria-current="page">Atomic Orbitals &amp; Quantum Mechanics</a>
+        <a href="{{ url_for('reactions') }}" class="nav-link">Essential Chemical Reactions</a>
+      </nav>
+    </div>
+    <div class="module-tabs-wrap">
+      <nav class="module-tabs" aria-label="Modules">
+        <a href="#module-a">A · Schrödinger Derivation</a>
+        <a href="#module-b">B · 3D Orbital Viewer</a>
+        <a href="#module-c">C · Element Configurations</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="main-container">
+    <!-- ================================================================ -->
+    <!-- Narrative intro                                                    -->
+    <!-- ================================================================ -->
+    <section class="orb-hero" aria-label="Overview">
+      <div class="hero-flow">
+        <div class="flow-step"><span class="flow-num">1</span><strong>Coulomb potential</strong><span>Electron bound to a +Ze nucleus (Rutherford’s nucleus!)</span></div>
+        <div class="flow-arrow" aria-hidden="true">→</div>
+        <div class="flow-step"><span class="flow-num">2</span><strong>Schrödinger equation</strong><span>Solved exactly in spherical coordinates</span></div>
+        <div class="flow-arrow" aria-hidden="true">→</div>
+        <div class="flow-step"><span class="flow-num">3</span><strong>Quantum numbers</strong><span>n, l, m<sub>l</sub> emerge from boundary conditions</span></div>
+        <div class="flow-arrow" aria-hidden="true">→</div>
+        <div class="flow-step"><span class="flow-num">4</span><strong>s, p, d, f orbitals</strong><span>3D shapes of ψ<sub>nlm</sub> and |ψ|²</span></div>
+        <div class="flow-arrow" aria-hidden="true">→</div>
+        <div class="flow-step"><span class="flow-num">5</span><strong>Periodic table</strong><span>Aufbau + Pauli + Hund fill Z = 1…118</span></div>
+      </div>
+      <p class="hero-note">
+        Every result on this page is checked against real measurements: the hydrogen emission spectrum (Balmer 1885, Lyman 1906),
+        the Zeeman effect (1896), the Stern–Gerlach experiment (1922) and spectroscopic ground-state configurations (NIST Atomic Spectra Database).
+      </p>
+    </section>
+
+    <!-- ================================================================ -->
+    <!-- MODULE A — Schrödinger derivation                                 -->
+    <!-- ================================================================ -->
+    <section id="module-a" class="orb-module" aria-labelledby="module-a-title">
+      <div class="section-heading">
+        <div>
+          <span class="section-eyebrow">MODULE A · MATHEMATICAL FOUNDATION</span>
+          <h2 id="module-a-title">Solving Schrödinger’s Equation for a Hydrogen-like Atom</h2>
+          <p>Step through the derivation — each equation animates in, and the graph on the right shows what it means physically.</p>
+        </div>
+        <div class="step-controls">
+          <button type="button" class="btn btn-secondary btn-sm" id="step-prev">◀ Prev</button>
+          <button type="button" class="btn btn-primary btn-sm" id="step-play">▶ Auto-play</button>
+          <button type="button" class="btn btn-secondary btn-sm" id="step-next">Next ▶</button>
+        </div>
+      </div>
+
+      <div class="step-tabs" role="tablist" aria-label="Derivation steps">
+        <button type="button" role="tab" class="step-tab active" data-step="1"><span>1</span>Coulomb potential &amp; TISE</button>
+        <button type="button" role="tab" class="step-tab" data-step="2"><span>2</span>Spherical coordinates</button>
+        <button type="button" role="tab" class="step-tab" data-step="3"><span>3</span>Separation of variables</button>
+        <button type="button" role="tab" class="step-tab" data-step="4"><span>4</span>Angular solution → l, m<sub>l</sub></button>
+        <button type="button" role="tab" class="step-tab" data-step="5"><span>5</span>Radial solution → n, E<sub>n</sub></button>
+      </div>
+      <div class="step-progress"><div class="step-progress-bar" id="step-progress-bar"></div></div>
+
+{% raw %}
+      <!-- STEP 1 -->
+      <article class="step-panel active" data-step="1">
+        <div class="step-math">
+          <h3>Step 1 — The Coulomb potential and the time-independent Schrödinger equation</h3>
+          <p class="eq-line" style="--i:0">A single electron (charge −e) is bound to a nucleus of charge +Ze. The interaction is the Coulomb potential, which depends only on the distance r:</p>
+          <div class="eq-line eq-box" style="--i:1">$$V(r) = -\frac{Ze^2}{4\pi\varepsilon_0\, r}$$</div>
+          <p class="eq-line" style="--i:2">Stationary states obey the time-independent Schrödinger equation (TISE), written in Cartesian coordinates:</p>
+          <div class="eq-line eq-box" style="--i:3">$$\left[-\frac{\hbar^2}{2\mu}\nabla^2 + V(r)\right]\psi(\mathbf r) = E\,\psi(\mathbf r),\qquad \nabla^2 = \frac{\partial^2}{\partial x^2}+\frac{\partial^2}{\partial y^2}+\frac{\partial^2}{\partial z^2}$$</div>
+          <div class="eq-line eq-box" style="--i:4">$$\mu = \frac{m_e\, m_N}{m_e + m_N} \approx m_e \quad\text{(reduced mass — accounts for nuclear motion)}$$</div>
+          <p class="eq-line insight" style="--i:5"><strong>Key insight:</strong> \(V\) depends on \(r = \sqrt{x^2+y^2+z^2}\) only — the problem is spherically symmetric, so Cartesian coordinates are the wrong language. We switch to spherical coordinates \((r,\theta,\phi)\).</p>
+        </div>
+        <figure class="step-visual">
+          <canvas id="canvas-step1" width="640" height="420" aria-label="Coulomb potential well with hydrogen energy levels"></canvas>
+          <figcaption>Coulomb well \(V(r)\) (Z = 1) with the bound-state energies \(E_n = -13.6/n^2\) eV that the full solution will produce. The Balmer lines (n → 2) are the visible hydrogen spectrum measured in 1885.</figcaption>
+        </figure>
+      </article>
+
+      <!-- STEP 2 -->
+      <article class="step-panel" data-step="2">
+        <div class="step-math">
+          <h3>Step 2 — The Laplacian in spherical coordinates</h3>
+          <div class="eq-line eq-box" style="--i:0">$$x = r\sin\theta\cos\phi,\qquad y = r\sin\theta\sin\phi,\qquad z = r\cos\theta$$</div>
+          <p class="eq-line" style="--i:1">Transforming \(\nabla^2\) with the chain rule gives three pieces — radial, polar and azimuthal:</p>
+          <div class="eq-line eq-box" style="--i:2">$$\nabla^2 = \underbrace{\frac{1}{r^2}\frac{\partial}{\partial r}\!\left(r^2\frac{\partial}{\partial r}\right)}_{\text{radial}} + \underbrace{\frac{1}{r^2\sin\theta}\frac{\partial}{\partial\theta}\!\left(\sin\theta\frac{\partial}{\partial\theta}\right) + \frac{1}{r^2\sin^2\theta}\frac{\partial^2}{\partial\phi^2}}_{-\hat L^2/(\hbar^2 r^2)}$$</div>
+          <p class="eq-line" style="--i:3">The angular part is exactly the (squared) orbital angular momentum operator \(\hat L^2\). The TISE becomes:</p>
+          <div class="eq-line eq-box" style="--i:4">$$-\frac{\hbar^2}{2\mu}\,\frac{1}{r^2}\frac{\partial}{\partial r}\!\left(r^2\frac{\partial\psi}{\partial r}\right) + \frac{\hat L^2}{2\mu r^2}\,\psi - \frac{Ze^2}{4\pi\varepsilon_0 r}\,\psi = E\,\psi$$</div>
+          <p class="eq-line insight" style="--i:5"><strong>Key insight:</strong> \(r\) appears in one group of terms and \((\theta,\phi)\) in another. This is what allows the equation to be split.</p>
+        </div>
+        <figure class="step-visual">
+          <canvas id="canvas-step2" width="640" height="420" aria-label="Spherical coordinate system diagram"></canvas>
+          <figcaption>Spherical coordinates: radius \(r\), polar angle \(\theta\) (from +z) and azimuth \(\phi\) (from +x in the xy-plane). The point moves to show each coordinate sweeping.</figcaption>
+        </figure>
+      </article>
+
+      <!-- STEP 3 -->
+      <article class="step-panel" data-step="3">
+        <div class="step-math">
+          <h3>Step 3 — Separation of variables</h3>
+          <p class="eq-line" style="--i:0">Try a product solution:</p>
+          <div class="eq-line eq-box" style="--i:1">$$\psi(r,\theta,\phi) = R_{nl}(r)\,Y_l^{m}(\theta,\phi) = R(r)\,\Theta(\theta)\,\Phi(\phi)$$</div>
+          <p class="eq-line" style="--i:2">Substitute, multiply by \(2\mu r^2/(\hbar^2 R\,Y)\) and rearrange. The left side depends only on \(r\), the right side only on \((\theta,\phi)\) — so both must equal the same constant, written \(l(l+1)\):</p>
+          <div class="eq-line eq-box" style="--i:3">$$\underbrace{\frac{1}{R}\frac{d}{dr}\!\left(r^2\frac{dR}{dr}\right) + \frac{2\mu r^2}{\hbar^2}\big[E - V(r)\big]}_{\text{function of } r \text{ only}} \;=\; \underbrace{-\frac{1}{Y}\left[\frac{1}{\sin\theta}\frac{\partial}{\partial\theta}\!\left(\sin\theta\frac{\partial Y}{\partial\theta}\right) + \frac{1}{\sin^2\theta}\frac{\partial^2 Y}{\partial\phi^2}\right]}_{\text{function of } \theta,\phi \text{ only}} \;=\; l(l+1)$$</div>
+          <div class="eq-split eq-line" style="--i:4">
+            <div class="eq-box"><span class="eq-tag">Radial equation</span>$$\frac{1}{r^2}\frac{d}{dr}\!\left(r^2\frac{dR}{dr}\right) + \left[\frac{2\mu}{\hbar^2}\!\left(E + \frac{Ze^2}{4\pi\varepsilon_0 r}\right) - \frac{l(l+1)}{r^2}\right]\!R = 0$$</div>
+            <div class="eq-box"><span class="eq-tag">Angular equation</span>$$\hat L^2\, Y = \hbar^2\, l(l+1)\, Y$$</div>
+          </div>
+          <p class="eq-line" style="--i:5">The angular equation separates once more with a second constant \(m^2\):</p>
+          <div class="eq-line eq-box" style="--i:6">$$\frac{d^2\Phi}{d\phi^2} = -m^2\,\Phi, \qquad \frac{1}{\sin\theta}\frac{d}{d\theta}\!\left(\sin\theta\frac{d\Theta}{d\theta}\right) + \left[l(l+1) - \frac{m^2}{\sin^2\theta}\right]\Theta = 0$$</div>
+        </div>
+        <figure class="step-visual">
+          <div class="separation-diagram" id="separation-diagram">
+            <div class="sep-node sep-root">ψ(r, θ, φ)</div>
+            <div class="sep-arrows" aria-hidden="true"><span>↙</span><span>↓</span><span>↘</span></div>
+            <div class="sep-row">
+              <div class="sep-node sep-r"><strong>R(r)</strong><span>radial equation</span><span class="sep-const">contains l(l+1) &amp; E</span><span class="sep-gives">→ quantum number <b>n</b>, energy E<sub>n</sub></span></div>
+              <div class="sep-node sep-t"><strong>Θ(θ)</strong><span>associated Legendre eq.</span><span class="sep-const">contains l(l+1) &amp; m²</span><span class="sep-gives">→ quantum number <b>l</b></span></div>
+              <div class="sep-node sep-p"><strong>Φ(φ)</strong><span>simple harmonic eq.</span><span class="sep-const">contains m²</span><span class="sep-gives">→ quantum number <b>m<sub>l</sub></b></span></div>
+            </div>
+            <div class="sep-footer">One 3D partial differential equation → three ordinary differential equations, linked by two separation constants.</div>
+          </div>
+          <figcaption>Each ordinary differential equation has acceptable (finite, single-valued, normalizable) solutions only for special values of its constant — that is where quantization comes from.</figcaption>
+        </figure>
+      </article>
+
+      <!-- STEP 4 -->
+      <article class="step-panel" data-step="4">
+        <div class="step-math">
+          <h3>Step 4 — Angular solutions: m<sub>l</sub>, l and the spherical harmonics</h3>
+          <div class="eq-line eq-box" style="--i:0">$$\Phi_m(\phi) = \frac{1}{\sqrt{2\pi}}\,e^{im\phi}, \qquad \Phi(\phi + 2\pi) = \Phi(\phi) \;\Rightarrow\; m_l = 0, \pm 1, \pm 2, \dots$$</div>
+          <p class="eq-line" style="--i:1">The θ equation has finite solutions at θ = 0 and π only if \(l\) is a non-negative integer with \(l \ge |m|\). They are the associated Legendre functions \(P_l^{|m|}(\cos\theta)\). Together:</p>
+          <div class="eq-line eq-box" style="--i:2">$$Y_l^{m}(\theta,\phi) = \sqrt{\frac{2l+1}{4\pi}\,\frac{(l-|m|)!}{(l+|m|)!}}\;P_l^{|m|}(\cos\theta)\,e^{im\phi}$$</div>
+          <div class="eq-line eq-box" style="--i:3">$$|\mathbf L| = \sqrt{l(l+1)}\,\hbar, \qquad L_z = m_l\,\hbar, \qquad \text{degeneracy of each } l = 2l+1$$</div>
+          <p class="eq-line" style="--i:4">Chemists use real combinations of \(\pm m\): \(\propto P_l^{|m|}\cos(|m|\phi)\) or \(P_l^{|m|}\sin(|m|\phi)\). These give the familiar \(p_x, p_y, p_z, d_{xy}, d_{z^2}, \dots\)</p>
+          <p class="eq-line insight" style="--i:5"><strong>Experimental check:</strong> the splitting of spectral lines into \(2l+1\) components in a magnetic field (Zeeman effect, 1896) directly counts the allowed \(m_l\) values.</p>
+        </div>
+        <figure class="step-visual">
+          <div class="visual-pair">
+            <div>
+              <canvas id="canvas-step4-ring" width="320" height="320" aria-label="Single-valuedness of Phi on a ring"></canvas>
+              <label class="control-item mini-control">
+                <span class="control-label">m = <strong id="ring-m-val">1.00</strong></span>
+                <input type="range" id="ring-m" min="0" max="4" step="0.05" value="1">
+              </label>
+              <p class="mini-caption" id="ring-status">Integer m: the wave joins smoothly after one full turn.</p>
+            </div>
+            <div>
+              <canvas id="canvas-step4-polar" width="320" height="320" aria-label="Polar plot of spherical harmonic"></canvas>
+              <div class="mini-row">
+                <label class="control-item mini-control"><span class="control-label">l = <strong id="polar-l-val">1</strong></span><input type="range" id="polar-l" min="0" max="3" step="1" value="1"></label>
+                <label class="control-item mini-control"><span class="control-label">m<sub>l</sub> = <strong id="polar-m-val">0</strong></span><input type="range" id="polar-m" min="-1" max="1" step="1" value="0"></label>
+              </div>
+              <p class="mini-caption" id="polar-caption"></p>
+            </div>
+          </div>
+          <figcaption>Left: Re Φ = cos(mφ) wrapped around one revolution — non-integer m makes Φ multi-valued (red break), so it is forbidden. Right: angular wave graph \(|Y_{lm}(\theta)|\) in a vertical plane (orange = +, blue = −).</figcaption>
+        </figure>
+      </article>
+
+      <!-- STEP 5 -->
+      <article class="step-panel" data-step="5">
+        <div class="step-math">
+          <h3>Step 5 — Radial solution: n and the energy levels</h3>
+          <p class="eq-line" style="--i:0">With \(u(r) = rR(r)\) the radial equation becomes a 1D problem with an effective potential (Coulomb + centrifugal barrier):</p>
+          <div class="eq-line eq-box" style="--i:1">$$-\frac{\hbar^2}{2\mu}\frac{d^2u}{dr^2} + \left[-\frac{Ze^2}{4\pi\varepsilon_0 r} + \frac{\hbar^2\, l(l+1)}{2\mu r^2}\right]u = E\,u$$</div>
+          <p class="eq-line" style="--i:2">A power-series solution stays normalizable only if the series terminates. That forces an integer \(n \ge l+1\) and gives the associated Laguerre polynomials:</p>
+          <div class="eq-line eq-box" style="--i:3">$$R_{nl}(r) = \sqrt{\left(\frac{2Z}{na_0}\right)^{3}\frac{(n-l-1)!}{2n\,(n+l)!}}\; e^{-\rho/2}\,\rho^{l}\,L^{2l+1}_{n-l-1}(\rho), \qquad \rho = \frac{2Zr}{na_0}, \quad a_0 \approx 0.529\ \text{Å}$$</div>
+          <div class="eq-line eq-box" style="--i:4">$$E_n = -\frac{\mu Z^2 e^4}{2\,(4\pi\varepsilon_0)^2\,\hbar^2\, n^2} \approx -\frac{13.6\,Z^2}{n^2}\ \text{eV}$$</div>
+          <div class="eq-line qn-table-wrap" style="--i:5">
+            <table class="qn-table">
+              <thead><tr><th>Quantum number</th><th>Origin</th><th>Allowed values</th><th>Physical meaning</th></tr></thead>
+              <tbody>
+                <tr><td>\(n\) principal</td><td>Radial series termination</td><td>\(1, 2, 3, \dots\)</td><td>Energy \(E_n\), size; \(n-1\) total nodes</td></tr>
+                <tr><td>\(l\) azimuthal</td><td>Finite Θ(θ) at poles</td><td>\(0 \le l \le n-1\)</td><td>Shape (s, p, d, f); \(|\mathbf L| = \sqrt{l(l+1)}\hbar\)</td></tr>
+                <tr><td>\(m_l\) magnetic</td><td>Single-valued Φ(φ)</td><td>\(-l \le m_l \le +l\)</td><td>Orientation; \(L_z = m_l\hbar\)</td></tr>
+                <tr><td>\(m_s\) spin</td><td>Stern–Gerlach (1922) / Dirac eq.</td><td>\(\pm\tfrac12\)</td><td>Intrinsic spin \(S_z = m_s\hbar\)</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <figure class="step-visual">
+          <canvas id="canvas-step5" width="640" height="380" aria-label="Radial wavefunction graph"></canvas>
+          <div class="mini-row">
+            <label class="control-item mini-control"><span class="control-label">n = <strong id="rad-n-val">3</strong></span><input type="range" id="rad-n" min="1" max="7" step="1" value="3"></label>
+            <label class="control-item mini-control"><span class="control-label">l = <strong id="rad-l-val">0</strong></span><input type="range" id="rad-l" min="0" max="2" step="1" value="0"></label>
+            <span class="mini-caption" id="rad-caption"></span>
+          </div>
+          <figcaption>Radial wave graph: \(R_{nl}(r)\) (dashed) and radial probability \(P(r) = r^2 R_{nl}^2\) (filled). White ticks mark the \(n-l-1\) radial nodes.</figcaption>
+        </figure>
+      </article>
+{% endraw %}
+    </section>
+
+    <!-- ================================================================ -->
+    <!-- MODULE B — 3D Orbital viewer                                      -->
+    <!-- ================================================================ -->
+    <section id="module-b" class="orb-module" aria-labelledby="module-b-title">
+      <div class="section-heading">
+        <div>
+          <span class="section-eyebrow">MODULE B · 3D VISUALIZATION</span>
+          <h2 id="module-b-title">Interactive 3D Orbital Viewer — s, p, d, f</h2>
+          <p>Exact hydrogen-like ψ<sub>nlm</sub> (Z = 1). Drag to rotate, right-drag / two-finger to pan, scroll to zoom.</p>
+        </div>
+        <div class="preset-chips" id="preset-chips" aria-label="Orbital presets"></div>
+      </div>
+
+      <div class="viewer-layout">
+        <div class="viewer-card">
+          <div class="canvas-header">
+            <div>
+              <span class="panel-tag">ψ<sub>nlm</sub>(r, θ, φ)</span>
+              <h2 id="viewer-title">2p<sub>z</sub> orbital</h2>
+            </div>
+            <div class="legend-inline">
+              <span><i class="sw sw-pos"></i>ψ &gt; 0</span>
+              <span><i class="sw sw-neg"></i>ψ &lt; 0</span>
+              <span><i class="sw sw-node"></i>nodal surface</span>
+            </div>
+          </div>
+          <div class="viewer-stage" id="viewer-stage">
+            <div class="viewer-overlay" id="viewer-overlay" hidden>Computing ψ on 3D grid…</div>
+            <div class="viewer-fallback" id="viewer-fallback" hidden>
+              3D viewer unavailable (WebGL or the Three.js CDN could not be loaded). The radial and angular graphs below still work.
+            </div>
+            <div class="viewer-hud" id="viewer-hud"></div>
+          </div>
+        </div>
+
+        <aside class="viewer-panel" aria-label="Orbital controls">
+          <div class="panel-block">
+            <h3>Quantum numbers</h3>
+            <label class="qn-slider">
+              <span>n <small>principal</small></span>
+              <input type="range" id="qn-n" min="1" max="7" step="1" value="2">
+              <output id="qn-n-val">2</output>
+            </label>
+            <label class="qn-slider">
+              <span>l <small>azimuthal</small></span>
+              <input type="range" id="qn-l" min="0" max="1" step="1" value="1">
+              <output id="qn-l-val">1</output>
+            </label>
+            <label class="qn-slider">
+              <span>m<sub>l</sub> <small>magnetic</small></span>
+              <input type="range" id="qn-m" min="-1" max="1" step="1" value="0">
+              <output id="qn-m-val">0</output>
+            </label>
+            <div class="formula-display" id="orbital-formula"></div>
+          </div>
+
+          <div class="panel-block">
+            <h3>Display</h3>
+            <div class="toggle-grid">
+              <label class="checkbox-pill"><input type="checkbox" id="opt-surface" checked> 90% isosurface</label>
+              <label class="checkbox-pill"><input type="checkbox" id="opt-cloud" checked> Dot-density cloud</label>
+              <label class="checkbox-pill"><input type="checkbox" id="opt-phase" checked> Phase colours</label>
+              <label class="checkbox-pill"><input type="checkbox" id="opt-nodes" checked> Nodal surfaces</label>
+              <label class="checkbox-pill"><input type="checkbox" id="opt-axes" checked> Axes</label>
+              <label class="checkbox-pill"><input type="checkbox" id="opt-rotate" checked> Auto-rotate</label>
+              <label class="checkbox-pill"><input type="checkbox" id="opt-graph" checked> Radial graph</label>
+            </div>
+            <label class="control-item wide-range">
+              <span class="control-label">Clipping plane x = <strong id="clip-val">off</strong></span>
+              <input type="range" id="clip" min="-1" max="1.05" step="0.01" value="1.05">
+            </label>
+            <label class="control-item wide-range">
+              <span class="control-label">Isosurface opacity <strong id="opacity-val">0.78</strong></span>
+              <input type="range" id="surface-opacity" min="0.1" max="1" step="0.01" value="0.78">
+            </label>
+            <div class="btn-row">
+              <button type="button" class="btn btn-accent btn-sm" id="btn-buildup">⟳ Replay measurements</button>
+              <button type="button" class="btn btn-secondary btn-sm" id="btn-reset-cam">⌖ Reset view</button>
+              <button type="button" class="btn btn-secondary btn-sm" id="btn-snapshot">⤓ PNG</button>
+            </div>
+            <p class="cloud-progress" id="cloud-progress"></p>
+          </div>
+
+          <div class="panel-block">
+            <h3>Orbital properties</h3>
+            <dl class="prop-grid" id="orbital-props"></dl>
+          </div>
+        </aside>
+      </div>
+
+      <div class="graph-row" id="graph-row">
+        <div class="telemetry-card">
+          <div class="card-header-inline">
+            <h3>Radial probability distribution</h3>
+            <span class="formula-pill">P(r) = r²|R<sub>nl</sub>|² (≡ 4πr²|ψ|² for s)</span>
+          </div>
+          <canvas id="radial-canvas" class="graph-canvas" width="720" height="260" aria-label="Radial probability plot"></canvas>
+        </div>
+        <div class="telemetry-card">
+          <div class="card-header-inline">
+            <h3>Angular cross-section</h3>
+            <span class="formula-pill" id="angular-pill">|Y<sub>lm</sub>| polar plot</span>
+          </div>
+          <canvas id="angular-canvas" class="graph-canvas square" width="300" height="260" aria-label="Angular polar plot"></canvas>
+        </div>
+      </div>
+
+      <div class="comparison-table-card subshell-card">
+        <h3>Subshell reference</h3>
+        <div class="table-scroll">
+{% raw %}
+          <table class="comparison-table subshell-table">
+            <thead>
+              <tr><th>Subshell</th><th>l</th><th>Orbitals (2l+1)</th><th>Max e⁻</th><th>Angular nodes</th><th>Real angular functions</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><strong class="blk-s">s</strong></td><td>0</td><td>1</td><td>2</td><td>0</td><td>\(Y_{00} = 1/\sqrt{4\pi}\) — spherical</td></tr>
+              <tr><td><strong class="blk-p">p</strong></td><td>1</td><td>3</td><td>6</td><td>1 plane</td><td>\(p_z \propto \cos\theta,\; p_x \propto \sin\theta\cos\phi,\; p_y \propto \sin\theta\sin\phi\)</td></tr>
+              <tr><td><strong class="blk-d">d</strong></td><td>2</td><td>5</td><td>10</td><td>2 (planes / cones)</td><td>\(d_{z^2} \propto 3\cos^2\theta - 1,\; d_{x^2-y^2} \propto \sin^2\theta\cos 2\phi,\; d_{xy} \propto \sin^2\theta\sin 2\phi,\; d_{xz}, d_{yz} \propto \sin\theta\cos\theta\,(\cos\phi, \sin\phi)\)</td></tr>
+              <tr><td><strong class="blk-f">f</strong></td><td>3</td><td>7</td><td>14</td><td>3</td><td>\(f_{z^3} \propto 5\cos^3\theta - 3\cos\theta,\; f_{xyz} \propto \sin^2\theta\cos\theta\sin2\phi,\; f_{x(x^2-3y^2)} \propto \sin^3\theta\cos3\phi,\;\dots\)</td></tr>
+            </tbody>
+          </table>
+{% endraw %}
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================ -->
+    <!-- MODULE C — Element selector & configuration engine                -->
+    <!-- ================================================================ -->
+    <section id="module-c" class="orb-module" aria-labelledby="module-c-title">
+      <div class="section-heading">
+        <div>
+          <span class="section-eyebrow">MODULE C · PERIODIC TABLE ENGINE</span>
+          <h2 id="module-c-title">Element Selector &amp; Electron Configuration Engine</h2>
+          <p>Aufbau (Madelung n + l rule) + Pauli exclusion + Hund’s rule, with the experimentally measured exceptions.</p>
+        </div>
+        <div class="element-search">
+          <input type="search" id="element-search" class="select-input" list="element-list" placeholder="Search: Fe, Gold, 79…" autocomplete="off" aria-label="Search element by symbol, name or Z">
+          <datalist id="element-list">
+            {% for e in elements %}<option value="{{ e.symbol }} — {{ e.name }} ({{ e.z }})"></option>{% endfor %}
+          </datalist>
+          <button type="button" class="btn btn-secondary btn-sm" id="el-prev" aria-label="Previous element">◀</button>
+          <button type="button" class="btn btn-secondary btn-sm" id="el-next" aria-label="Next element">▶</button>
+          <button type="button" class="btn btn-primary btn-sm" id="btn-build-z">▶ Build up from H</button>
+        </div>
+      </div>
+
+      <div class="ptable-card">
+        <div class="ptable" id="ptable" role="grid" aria-label="Periodic table"></div>
+        <div class="ptable-legend">
+          <span><i class="sw blk-bg-s"></i>s-block</span>
+          <span><i class="sw blk-bg-p"></i>p-block</span>
+          <span><i class="sw blk-bg-d"></i>d-block</span>
+          <span><i class="sw blk-bg-f"></i>f-block</span>
+          <span><i class="sw sw-exc"></i>Aufbau exception</span>
+        </div>
+      </div>
+
+      <div class="element-layout">
+        <div class="element-main">
+          <div class="element-head" id="element-head"></div>
+          <div class="exception-banner" id="exception-banner" hidden></div>
+          <div class="config-outputs">
+            <div class="config-line"><span class="config-label">Full notation (filling order)</span><code id="config-full"></code></div>
+            <div class="config-line"><span class="config-label">Condensed (noble-gas core)</span><code id="config-condensed"></code></div>
+          </div>
+          <div class="stats-grid" id="element-stats"></div>
+          <div class="shell-bars" id="shell-bars"></div>
+        </div>
+
+        <div class="element-boxes">
+          <div class="card-header-inline">
+            <h3>Orbital box diagram <small>(energy ↑, Madelung order)</small></h3>
+            <button type="button" class="btn btn-accent btn-sm" id="btn-replay-fill">⟳ Replay filling</button>
+          </div>
+          <p class="hint-text">Hover an arrow for its quantum numbers (n, l, m<sub>l</sub>, m<sub>s</sub>). Click a box to view that orbital in 3D.</p>
+          <div class="box-diagram" id="box-diagram"></div>
+        </div>
+
+        <div class="element-madelung">
+          <h3>Madelung (n + l) filling diagram</h3>
+          <svg id="madelung-svg" viewBox="0 0 300 330" role="img" aria-label="Madelung diagonal rule diagram"></svg>
+          <p class="hint-text">Subshells fill along the diagonals of increasing n + l; for equal n + l the lower n fills first. Highlighted = occupied in the selected element.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="e-tooltip" id="e-tooltip" role="tooltip" hidden></div>
+
+  <footer class="site-footer">
+    <p>Atomic Orbitals &amp; Quantum Mechanics • Analytic hydrogen-like wavefunctions, Three.js marching-cubes isosurfaces, NIST ground-state configurations • Built with Flask</p>
+  </footer>
+
+  <script>
+    window.ELEMENTS = {{ elements | tojson }};
+    window.MADELUNG = {{ madelung | tojson }};
+  </script>
+  <script type="module" src="{{ url_for('static', filename='js/orbitals/orbitals_app.js') }}"></script>
+</body>
+</html>

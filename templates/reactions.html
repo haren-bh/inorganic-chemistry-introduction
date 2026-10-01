@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inorganic Chemistry: Introduction — Essential Chemical &amp; Ionic Equations</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/reactions.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+</head>
+<body class="reactions-page">
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="brand-group">
+        <a class="app-brand" href="{{ url_for('index') }}">Inorganic Chemistry: Introduction</a>
+        <span class="badge-era">AP / IB &amp; 1ST-YEAR UNIVERSITY CHEMISTRY • {{ total_reactions }} EQUATIONS</span>
+        <h1>Essential Chemical &amp; Ionic Equations</h1>
+        <p class="subtitle">
+          Interactive Reference Catalog, Chemical Specimen Gallery &amp; Virtual Laboratory Apparatus Simulator
+        </p>
+      </div>
+
+      <nav class="page-nav" aria-label="Sections">
+        <a href="{{ url_for('index') }}" class="nav-link">Rutherford &amp; Thomson Experiments</a>
+        <a href="{{ url_for('orbitals') }}" class="nav-link">Atomic Orbitals &amp; Quantum Mechanics</a>
+        <a href="{{ url_for('reactions') }}" class="nav-link active" aria-current="page">Essential Chemical Reactions</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="main-container reactions-main">
+    <!-- ================================================================ -->
+    <!-- VIEW 1 — Section View: one reaction section (category) at a time -->
+    <!-- ================================================================ -->
+    <div class="rxn-view" id="section-view" aria-label="Reaction Section">
+      <!-- Search, Filter & Quick Navigation Toolbar -->
+      <section class="catalog-toolbar" aria-label="Search and Filter Controls">
+        <div class="toolbar-top">
+          <div class="search-box-wrap">
+            <svg class="search-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+              <circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/>
+              <line x1="16.5" y1="16.5" x2="21" y2="21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <input
+              type="search"
+              id="rxn-search-input"
+              placeholder="Search all {{ total_reactions }} reactions by #number, formula (AgCl, KMnO4, CuSO4), name (Haber, Thermite, Tollens), or concept..."
+              autocomplete="off"
+            >
+            <button type="button" id="rxn-search-clear" class="search-clear-btn" hidden title="Clear search">✕</button>
+          </div>
+
+          <div class="jump-select-wrap">
+            <label for="rxn-jump-select" class="sr-only">Open Reaction</label>
+            <select id="rxn-jump-select" class="jump-select">
+              <option value="">Open Reaction (#1 – #{{ total_reactions }})...</option>
+            </select>
+          </div>
+
+          <div class="results-counter" id="rxn-results-counter" aria-live="polite">
+            Showing <strong>{{ total_reactions }}</strong> of {{ total_reactions }} reactions
+          </div>
+        </div>
+
+        <div class="toolbar-filters" role="group" aria-label="Feature Filters">
+          <span class="filter-label">Filter this section:</span>
+          <button type="button" class="filter-chip active" data-filter="all">All Equations</button>
+          <button type="button" class="filter-chip" data-filter="spec">Core AP/IB &amp; College Spec</button>
+          <button type="button" class="filter-chip chip-added" data-filter="added">★ Added Essential</button>
+          <button type="button" class="filter-chip" data-filter="ionic">Has Complete / Net Ionic</button>
+          <button type="button" class="filter-chip" data-filter="redox">Has Half-Reactions (e⁻)</button>
+          <button type="button" class="filter-chip" data-filter="precip">Forms Precipitate (s)↓</button>
+          <button type="button" class="filter-chip" data-filter="gas">Evolves Gas (g)↑</button>
+          <button type="button" class="filter-chip" data-filter="thermal">High-Temp / Flame (Δ)</button>
+        </div>
+      </section>
+
+      <!-- Two-Column Layout: Section Index Sidebar + Current Section -->
+      <div class="catalog-layout">
+        <aside class="catalog-sidebar" aria-label="Reaction Section Index">
+          <div class="sidebar-card">
+            <div class="sidebar-heading">
+              <h3>Reaction Sections</h3>
+              <span class="sidebar-sub">Each section opens in its own view</span>
+            </div>
+            <ul class="sidebar-cat-list" id="sidebar-cat-list">
+              {% for cat in categories %}
+              <li>
+                <a href="#/section/{{ cat.id }}" class="sidebar-cat-btn" data-cat="{{ cat.id }}" style="--cat-accent: {{ cat.color }}">
+                  <span class="cat-swatch" style="background: {{ cat.color }}"></span>
+                  <span class="cat-btn-text">
+                    <strong>{{ cat.title }}</strong>
+                    <small>{{ cat.pattern }}</small>
+                  </span>
+                  <span class="cat-badge-count" data-cat-count="{{ cat.id }}">{{ cat.count }}</span>
+                </a>
+              </li>
+              {% endfor %}
+            </ul>
+
+            <div class="sidebar-tip">
+              <strong>Tip:</strong>
+              Click any reaction card to open it in its own view with the animated laboratory instruments, all equations and the chemical specimens. Use <em>Back to Section</em> to return.
+            </div>
+          </div>
+        </aside>
+
+        <div class="catalog-feed">
+          <!-- Very visible section header (filled by JS) -->
+          <header class="section-banner" id="section-banner"></header>
+
+          <!-- Section 12: Canonical Equation Types Summary Table (only shown in Section 12) -->
+          <section class="canonical-summary-section" id="category-section-12" aria-label="Canonical Summary Table" hidden>
+            <h3 class="feed-subheading">Summary Table: Canonical Equation Types</h3>
+            <p class="cat-desc">
+              Master comparison of the 9 fundamental reaction archetypes, their general symbolic patterns, canonical examples, and thermodynamic/electrochemical driving forces.
+            </p>
+            <div class="canonical-table-wrap">
+              <table class="canonical-table">
+                <thead>
+                  <tr>
+                    <th>Reaction Type</th>
+                    <th>General Form</th>
+                    <th>Canonical Example</th>
+                    <th>Primary Driving Force</th>
+                    <th>Interactive Lab</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for row in canonical_summary %}
+                  <tr>
+                    <td><strong>{{ row.reaction_type }}</strong></td>
+                    <td><span class="katex-inline" data-tex="{{ row.general_form }}"></span></td>
+                    <td><span class="katex-inline" data-tex="{{ row.canonical_example }}"></span></td>
+                    <td>{{ row.driving_force }}</td>
+                    <td>
+                      <a class="btn-table-sim" href="#/reaction/{{ row.jump_id }}">
+                        Open #{{ row.jump_id }} ⚗️
+                      </a>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- Reaction cards of the current section (filled by JS) -->
+          <div id="reactions-feed-container"></div>
+
+          <!-- Previous / Next section pager (filled by JS) -->
+          <nav class="section-pager" id="section-pager" aria-label="Section pagination"></nav>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================================================================ -->
+    <!-- VIEW 2 — Reaction View: a single reaction with its lab animation -->
+    <!-- ================================================================ -->
+    <div class="rxn-view" id="reaction-view" aria-label="Reaction Detail" hidden>
+      <nav class="reaction-breadcrumb" id="reaction-breadcrumb" aria-label="Breadcrumb"></nav>
+
+      <!-- Section header repeated at the start of the reaction view -->
+      <header class="section-banner section-banner--compact" id="reaction-section-banner"></header>
+
+      <!-- Interactive Virtual Chemistry Lab Workbench -->
+      <section class="lab-workbench-section" id="lab-workbench" aria-label="Interactive Virtual Chemistry Lab Workbench">
+        <div class="workbench-header">
+          <div class="workbench-title-group">
+            <div class="workbench-eyebrow">
+              <span class="pulse-dot"></span>
+              <span id="wb-cat-badge">1. Synthesis &amp; Combination</span>
+              <span class="wb-sep">•</span>
+              <span id="wb-apparatus-badge" class="wb-instrument-tag">Gas Eudiometer &amp; Spark Igniter</span>
+            </div>
+            <h2 id="wb-title" tabindex="-1">#1 · Formation of Water</h2>
+            <div id="wb-equation-bar" class="wb-equation-bar"></div>
+          </div>
+
+          <div class="workbench-controls">
+            <button type="button" id="wb-btn-play" class="btn btn-primary" title="Play or Pause Lab Reaction">
+              Pause Animation
+            </button>
+            <button type="button" id="wb-btn-step" class="btn btn-accent" title="Trigger Pour / Mix / Ignite / Titrate Pulse">
+              Add Reagent / Trigger Pulse
+            </button>
+            <button type="button" id="wb-btn-reset" class="btn btn-secondary" title="Reset Apparatus to Initial State">
+              Reset Lab
+            </button>
+            <label class="wb-toggle-label" title="Show submicroscopic ions, electrons, and molecular collisions">
+              <input type="checkbox" id="wb-chk-micro" checked>
+              <span>Microscopic Ion / Particle Inset</span>
+            </label>
+            <label class="wb-toggle-label" title="Overlay PubChem 2D Chemical Structure images alongside SVG Lab Specimens">
+              <input type="checkbox" id="wb-chk-pubchem" checked>
+              <span>PubChem 2D Structures</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="workbench-body">
+          <!-- Left/Center: Animated Lab Instruments Canvas -->
+          <div class="workbench-stage-wrap">
+            <canvas id="wb-canvas" width="860" height="440" aria-label="Animated Chemical Reaction in Laboratory Instruments"></canvas>
+
+            <!-- Progress Scrubber & Speed Bar -->
+            <div class="workbench-scrubber-bar">
+              <div class="scrubber-group">
+                <label for="wb-progress">Reaction Progress (<span id="wb-progress-val">0%</span>)</label>
+                <input type="range" id="wb-progress" min="0" max="100" value="0" step="0.5">
+              </div>
+              <div class="scrubber-group speed-group">
+                <label for="wb-speed">Lab Speed (<span id="wb-speed-val">1.0×</span>)</label>
+                <input type="range" id="wb-speed" min="0.25" max="2.5" value="1.0" step="0.25">
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Live Lab Telemetry & Explanations -->
+          <aside class="workbench-inspector">
+            <div class="telemetry-grid">
+              <div class="telemetry-card">
+                <span class="tel-label">Lab Thermometer</span>
+                <strong class="tel-value" id="wb-temp-readout">25.0 °C</strong>
+              </div>
+              <div class="telemetry-card">
+                <span class="tel-label">Phase / Signal</span>
+                <strong class="tel-value" id="wb-signal-readout">Spark Flash</strong>
+              </div>
+              <div class="telemetry-card">
+                <span class="tel-label">Reaction Class</span>
+                <strong class="tel-value" id="wb-subcat-readout">Nonmetal + O₂</strong>
+              </div>
+            </div>
+
+            <div class="wb-explanation-box">
+              <div class="obs-header">What This Reaction Does &amp; Driving Force</div>
+              <p id="wb-explanation-text"></p>
+            </div>
+
+            <div class="wb-observation-box">
+              <div class="obs-header">Lab Instrument Observation</div>
+              <p id="wb-observation-text"></p>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- All equations + chemical specimens for this reaction (filled by JS) -->
+      <section class="reaction-detail" id="reaction-detail" aria-label="Equations and Chemical Specimens"></section>
+
+      <!-- Previous / Next reaction within the section (filled by JS) -->
+      <nav class="reaction-pager" id="reaction-pager" aria-label="Reaction pagination"></nav>
+    </div>
+  </main>
+
+  <script id="reactions-payload-json" type="application/json">
+    {{ payload | tojson }}
+  </script>
+  <script defer src="{{ url_for('static', filename='js/reactions/reactions_app.js') }}"></script>
+</body>
+</html>

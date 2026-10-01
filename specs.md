@@ -235,4 +235,27 @@ Added a new section `/reactions` (**Essential Chemical & Ionic Equations for Hig
 - Added `.gitignore` (Python caches, virtualenvs, `.env*`, `.DS_Store`, editor folders, `node_modules/`).
 - Added `requirements.txt` (`Flask>=3.0,<4` — the only runtime dependency; KaTeX/Three.js come from CDN).
 - Added `README.md` (app overview of the three pages, run instructions, tests, project layout).
-- GitHub CLI could not be used (blocked by the machine's binary-allowlisting policy), so the remote repository creation/push is pending a GitHub authentication method (SSH key or approved CLI).
+- Remote `origin` set to `https://github.com/haren-bh/inorganic-chemistry-introduction.git` and pushed (`main -> main`).
+
+---
+
+## 2026-10-01 — Google Cloud Run Deployment (`haren-main` / `us-central1`)
+
+**Request:** "Deploy this to cloud run under haren-main project us-central1 region"
+
+1. **`Dockerfile` (NEW)**
+   - Added a `python:3.12-slim` container build installing `requirements.txt` and serving `app:app` with Gunicorn (`exec gunicorn --bind :${PORT:-8080} --workers 2 --threads 4 --timeout 0 app:app`).
+
+2. **`.dockerignore` (NEW)**
+   - Excluded `.git`, `__pycache__`, virtual environments, `.env*`, editor directories, and `tests/` from the container build context.
+
+3. **`requirements.txt` (Modified)**
+   - Added `gunicorn>=21.2.0,<24` alongside `Flask>=3.0,<4`.
+
+4. **`app.py` (Modified)**
+   - Imported `os`, updated the top-level docstring to describe all three sections of *Inorganic Chemistry: Introduction*, and updated `if __name__ == "__main__":` to read `PORT`, `HOST`, and `FLASK_DEBUG` from environment variables.
+
+5. **Deployment & Verification**
+   - Deployed via Cloud Run MCP (`deploy_local_folder`) to project `haren-main`, region `us-central1`, service `inorganic-chemistry-introduction`.
+   - Live Service URL: `https://inorganic-chemistry-introduction-nad4p273qa-uc.a.run.app`
+   - Verified `/`, `/orbitals`, `/reactions`, and `/api/reactions` all return HTTP `200`.

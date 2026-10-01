@@ -1,9 +1,12 @@
 """
-Flask web application for visualizing and exploring Ernest Rutherford's
-Gold Leaf (Geiger-Marsden) Alpha Scattering Experiment (1909-1911).
+Inorganic Chemistry: Introduction — Flask web application featuring:
+1. Rutherford's Gold Leaf Scattering & Thomson's Cathode Ray Experiments
+2. Atomic Orbitals & Quantum Mechanics (Schrödinger equation, 3D viewer, Z=1–118)
+3. Essential Chemical & Ionic Equations (206 reactions across 12 sections with lab simulator)
 """
 
 import math
+import os
 from flask import Flask, jsonify, render_template, request
 
 import quantum_engine
@@ -285,5 +288,8 @@ def api_reaction(rxn_id: int):
 
 
 if __name__ == "__main__":
-    app.run(host="127.0.0.1", port=5000, debug=True)
+    port = int(os.environ.get("PORT", "5000"))
+    host = os.environ.get("HOST", "0.0.0.0" if "PORT" in os.environ else "127.0.0.1")
+    debug = os.environ.get("FLASK_DEBUG", "0" if "PORT" in os.environ else "1") == "1"
+    app.run(host=host, port=port, debug=debug)
 

@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inorganic Chemistry: Introduction — AP Chemistry Practice Quiz (Units 1–9)</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/reactions.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/quiz.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+</head>
+<body class="quiz-page">
+  {% include '_chrome.html' %}
+
+  <main class="main-container quiz-main">
+    <!-- ================================================================ -->
+    <!-- Collapsible AP Chemistry Constants & Equations Reference Sheet    -->
+    <!-- ================================================================ -->
+    <section class="ap-ref-drawer" id="ap-ref-drawer" hidden aria-label="AP Chemistry Equations and Constants Reference Sheet">
+      <div class="ref-drawer-head">
+        <div>
+          <span class="section-eyebrow">OFFICIAL AP EXAM REFERENCE</span>
+          <h3>{{ reference_sheet.title }}</h3>
+        </div>
+        <button type="button" class="btn btn-secondary" id="btn-close-ref">✕ Close Reference</button>
+      </div>
+      <div class="ref-drawer-grid">
+        <div class="ref-col">
+          <h4>Physical Constants</h4>
+          <table class="quiz-data-table ref-table">
+            <thead>
+              <tr>
+                <th>Symbol</th>
+                <th>Quantity</th>
+                <th>Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for c in reference_sheet.constants %}
+              <tr>
+                <td><span class="katex-inline" data-tex="{{ c.symbol }}"></span></td>
+                <td>{{ c.name }}</td>
+                <td><span class="katex-inline" data-tex="{{ c.value }}"></span></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+
+          <h4 class="ref-subhead">Unit Conversions</h4>
+          <ul class="ref-conversion-list">
+            {% for conv in reference_sheet.unit_conversions %}
+            <li><span class="katex-inline" data-tex="{{ conv }}"></span></li>
+            {% endfor %}
+          </ul>
+
+          <h4 class="ref-subhead">Metric Prefixes</h4>
+          <table class="quiz-data-table ref-table ref-prefix-table">
+            <thead>
+              <tr>
+                <th>Factor</th>
+                <th>Prefix</th>
+                <th>Symbol</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for p in reference_sheet.metric_prefixes %}
+              <tr>
+                <td><span class="katex-inline" data-tex="{{ p.factor }}"></span></td>
+                <td>{{ p.prefix }}</td>
+                <td>{{ p.symbol }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+
+          <h4 class="ref-subhead">Unit Symbols</h4>
+          <p class="ref-unit-symbols">
+            {% for name, sym in reference_sheet.unit_symbols %}<span>{{ name }}, <b>{{ sym }}</b></span>{% endfor %}
+          </p>
+        </div>
+        <div class="ref-col">
+          <h4>Equations by Section</h4>
+          <div class="ref-eq-groups">
+            {% for grp in reference_sheet.equations %}
+            <div class="ref-eq-card">
+              <h5>{{ grp.category }}</h5>
+              <ul>
+                {% for eq in grp["items"] %}
+                <li><span class="katex-inline" data-tex="{{ eq }}"></span></li>
+                {% endfor %}
+              </ul>
+              {% if grp.legend %}
+              <dl class="ref-legend">
+                {% for sym, meaning in grp.legend %}
+                <div><dt><span class="katex-inline" data-tex="{{ sym }}"></span></dt><dd>{{ meaning }}</dd></div>
+                {% endfor %}
+              </dl>
+              {% endif %}
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================ -->
+    <!-- Full-Width Active Unit Practice Workspace (Units in Left Sidebar) -->
+    <!-- ================================================================ -->
+    <div class="catalog-layout quiz-layout quiz-layout-single-col">
+      <div class="catalog-feed quiz-workspace">
+        <!-- Prominent Unit Banner (populated dynamically by JS) -->
+        <header class="section-banner" id="quiz-unit-banner"></header>
+
+        <!-- Topic Filter, Difficulty Filter, Search & Timed Mode Toggle -->
+        <section class="quiz-controls-card" aria-label="Unit Topic and Set Filters">
+          <div class="quiz-filters-row">
+            <div class="filter-field">
+              <label for="quiz-topic-select">CED Topic Filter</label>
+              <select id="quiz-topic-select" class="jump-select">
+                <option value="all">All Unit Topics</option>
+              </select>
+            </div>
+
+            <div class="filter-field">
+              <label for="quiz-difficulty-select">Difficulty Level</label>
+              <select id="quiz-difficulty-select" class="jump-select">
+                <option value="all">All Exam Difficulties</option>
+                <option value="AP Exam Level">AP Exam Level (Standard MCQ)</option>
+                <option value="Challenging">Challenging (Multi-Step / Data Analysis)</option>
+              </select>
+            </div>
+
+            <div class="filter-field filter-search-field">
+              <label for="quiz-search-input">Search Within Unit</label>
+              <input
+                type="search"
+                id="quiz-search-input"
+                class="quiz-search-input"
+                placeholder="Filter by keyword, formula (Ksp, PES, pKa, E°cell)..."
+                autocomplete="off"
+              >
+            </div>
+
+            <div class="quiz-mode-toggle-actions">
+              <button
+                type="button"
+                class="btn btn-primary"
+                id="btn-toggle-timed-mode"
+                data-current-mode="single"
+                title="Switch to Timed 10-Question Batch Quiz Mode"
+              >
+                ⏱ Timed Mode
+              </button>
+              <button
+                type="button"
+                class="btn btn-accent"
+                id="btn-toggle-ref"
+                aria-expanded="false"
+                aria-controls="ap-ref-drawer"
+              >
+                📐 AP Reference
+              </button>
+            </div>
+          </div>
+
+          <!-- ========================================================== -->
+          <!-- TIMED MODE TOOLBAR: 10-Question Set Selector & Progress     -->
+          <!-- ========================================================== -->
+          <div id="batch-controls-panel" class="mode-subpanel" hidden>
+            <div class="set-selector-row">
+              <span class="set-row-label">Timed 10-Question Sets:</span>
+              <div class="set-pills-group" id="batch-set-pills" role="group" aria-label="Select 10-Question Set"></div>
+              <button type="button" class="btn btn-accent btn-sm" id="btn-random-batch" title="Draw 10 random questions from this unit">
+                🎲 Random 10-Question Set
+              </button>
+              <button type="button" class="btn btn-secondary btn-sm" id="btn-retake-unit-batch" title="Retake all Timed Mode sets in this unit (previous attempts stay saved)">
+                ↺ Retake Unit (Timed Mode)
+              </button>
+              <button type="button" class="btn btn-secondary btn-sm" id="btn-revert-instant-mode" title="Return to Instant Feedback Mode (1 Question at a Time)">
+                ← Instant Feedback Mode
+              </button>
+            </div>
+
+            <div class="batch-status-strip">
+              <div class="batch-progress-info">
+                <span id="batch-progress-label">Answered <strong>0</strong> of <strong>10</strong> questions</span>
+                <progress id="batch-progress-bar" max="10" value="0">0%</progress>
+              </div>
+
+              <div class="quiz-timer-control-group" id="batch-timer-group">
+                <div class="quiz-timer-badge" id="batch-timer-badge" data-timer-state="not_started" title="Elapsed time for this 10-question set attempt">
+                  <span class="timer-dot" aria-hidden="true"></span>
+                  ⏱ <span id="batch-timer-val">00:00</span>
+                  <span class="timer-state-tag" id="batch-timer-state-tag">Ready</span>
+                </div>
+                <button type="button" class="btn btn-primary btn-sm btn-timer-action" id="btn-batch-timer-start">
+                  ▶ Start Quiz
+                </button>
+                <button type="button" class="btn btn-secondary btn-sm btn-timer-action" id="btn-batch-timer-pause" hidden>
+                  ⏸ Pause
+                </button>
+                <button type="button" class="btn btn-primary btn-sm btn-timer-action" id="btn-batch-timer-resume" hidden>
+                  ▶ Resume
+                </button>
+              </div>
+
+              <div class="batch-q-dots" id="batch-q-dots" aria-label="Jump to question in set"></div>
+
+              <div class="batch-actions">
+                <button type="button" class="btn btn-secondary btn-sm" id="btn-clear-batch" title="Start a fresh retake of this 10-question set">
+                  ↺ Retake This Set
+                </button>
+                <button type="button" class="btn btn-primary" id="btn-submit-batch">
+                  ✓ Submit 10 Questions &amp; Score
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ========================================================== -->
+          <!-- INSTANT FEEDBACK MODE TOOLBAR (Default): 1-by-1 Navigator   -->
+          <!-- ========================================================== -->
+          <div id="single-controls-panel" class="mode-subpanel">
+            <div class="single-nav-row">
+              <div class="single-pos-group">
+                <button type="button" class="btn btn-secondary btn-sm" id="btn-single-prev">
+                  ← Previous
+                </button>
+                <select id="single-jump-select" class="jump-select" aria-label="Jump to question"></select>
+                <button type="button" class="btn btn-secondary btn-sm" id="btn-single-next">
+                  Next →
+                </button>
+                <button type="button" class="btn btn-accent btn-sm" id="btn-single-random">
+                  🎲 Random Question
+                </button>
+              </div>
+
+              <div class="single-stats-group">
+                <div class="single-unit-score" id="single-unit-score">
+                  Mode 2 Score: <strong>0 / 0</strong>
+                </div>
+                <div class="quiz-timer-control-group" id="single-timer-group">
+                  <div class="quiz-timer-badge" id="single-timer-badge" data-timer-state="not_started" title="Elapsed time for this unit in Mode 2">
+                    <span class="timer-dot" aria-hidden="true"></span>
+                    ⏱ <span id="single-timer-val">00:00</span>
+                    <span class="timer-state-tag" id="single-timer-state-tag">Ready</span>
+                  </div>
+                  <button type="button" class="btn btn-primary btn-sm btn-timer-action" id="btn-single-timer-start">
+                    ▶ Start Quiz
+                  </button>
+                  <button type="button" class="btn btn-secondary btn-sm btn-timer-action" id="btn-single-timer-pause" hidden>
+                    ⏸ Pause
+                  </button>
+                  <button type="button" class="btn btn-primary btn-sm btn-timer-action" id="btn-single-timer-resume" hidden>
+                    ▶ Resume
+                  </button>
+                </div>
+              </div>
+
+              <div class="single-actions-group">
+                <button type="button" class="btn btn-primary btn-sm" id="btn-save-single-attempt" title="Record current Mode 2 progress for this unit as a saved attempt">
+                  ✓ Save Attempt
+                </button>
+                <button type="button" class="btn btn-secondary btn-sm" id="btn-retake-unit-single" title="Save current progress as an attempt and retake this unit in Mode 2 from Question 1">
+                  ↺ Retake Unit (Mode 2)
+                </button>
+                <button type="button" class="btn btn-secondary btn-sm" id="btn-toggle-qgrid" aria-expanded="true">
+                  Question Map <span id="qgrid-range"></span> ▾
+                </button>
+              </div>
+            </div>
+
+            <div class="single-qgrid" id="single-qgrid" role="navigation" aria-label="Unit Question Grid"></div>
+          </div>
+
+          <!-- Active Unit & Mode Past Attempts Summary Strip -->
+          <div class="unit-attempt-strip" id="unit-attempt-strip" aria-live="polite"></div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- START / PAUSE / RESUME STATUS CALLOUT BANNER                  -->
+        <!-- ============================================================ -->
+        <section class="quiz-timer-gate-banner" id="quiz-timer-gate-banner" hidden aria-live="polite"></section>
+
+        <!-- ============================================================ -->
+        <!-- MODE 1 SCORE SUMMARY BANNER (Revealed on Set Submission)      -->
+        <!-- ============================================================ -->
+        <section class="batch-score-banner" id="batch-score-banner" hidden aria-live="polite"></section>
+
+        <!-- ============================================================ -->
+        <!-- ACTIVE QUESTIONS STAGE (Mode 1 List or Mode 2 Single Card)    -->
+        <!-- ============================================================ -->
+        <div id="quiz-questions-stage" class="quiz-questions-stage"></div>
+
+        <!-- Bottom Submit Bar for Mode 1 (convenient at end of 10 questions) -->
+        <div class="batch-bottom-bar" id="batch-bottom-bar">
+          <div class="batch-bottom-info" id="batch-bottom-info">
+            Complete all 10 questions in this set, then submit to see your score and full step-by-step explanations.
+          </div>
+          <div class="batch-bottom-actions">
+            <button type="button" class="btn btn-secondary" id="btn-bottom-clear">
+              ↺ Retake This Set
+            </button>
+            <button type="button" class="btn btn-primary btn-lg" id="btn-bottom-submit">
+              ✓ Submit 10-Question Set &amp; Show Answers
+            </button>
+          </div>
+        </div>
+
+        <!-- Unit Pager (Previous / Next Unit) -->
+        <nav class="section-pager" id="quiz-unit-pager" aria-label="Unit pagination"></nav>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      Inorganic Chemistry: Introduction • AP Chemistry Practice Quiz ({{ total_questions }} Questions across Units 1–9) • Aligned with College Board AP Chemistry CED &amp; Khan Academy AP Chemistry
+    </p>
+  </footer>
+
+  <!-- Embedded Quiz Payload JSON -->
+  <script id="quiz-payload-json" type="application/json">{{ payload | tojson }}</script>
+  <script src="{{ url_for('static', filename='js/user_sync.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/quiz/quiz_app.js') }}"></script>
+</body>
+</html>

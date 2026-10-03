@@ -259,3 +259,393 @@ Added a new section `/reactions` (**Essential Chemical & Ionic Equations for Hig
    - Deployed via Cloud Run MCP (`deploy_local_folder`) to project `haren-main`, region `us-central1`, service `inorganic-chemistry-introduction`.
    - Live Service URL: `https://inorganic-chemistry-introduction-nad4p273qa-uc.a.run.app`
    - Verified `/`, `/orbitals`, `/reactions`, and `/api/reactions` all return HTTP `200`.
+
+---
+
+## 2026-10-03 — New Section: AP Chemistry Practice & Exam Quiz (`/quiz`) Across Units 1–9 (450 Questions, 2 Practice Modes)
+
+### Overview of Changes
+Added a new section `/quiz` (**AP Chemistry Practice & Exam Quiz**) aligned with the official College Board AP Chemistry Course and Exam Description (CED) and Khan Academy AP Chemistry curriculum across all **9 AP Chemistry Units** with **50 exam-level multiple-choice questions per unit** (**450 questions total** across all 91 CED topics). Implemented two interactive practice modes:
+- **Mode 1 (10 Questions at a Time — Score at End)**: Students work through structured 10-question sets (`Set 1: Q1–Q10` through `Set 5: Q41–Q50` per unit, or a randomized 10-question draw), submit at the end to receive their score (`X/10` and percentage), and review all 10 correct answers alongside detailed step-by-step explanations.
+- **Mode 2 (1 Question at a Time — Instant Feedback)**: Students answer one question at a time, immediately see whether their selected option is **Correct (`✓`)** or **Incorrect (`✗`)**, and view the detailed AP Chemistry explanation with KaTeX-rendered equations and calculations.
+
+### Exact Changes Made by File
+
+1. **`quiz_data/__init__.py` & `quiz_data/unit_1.py` .. `quiz_data/unit_9.py` (Created)**
+   - Authored 50 AP Exam-difficulty multiple-choice questions per unit (450 total) with data tables (`<table class="quiz-data-table">`), reaction equations, 4 answer choices (`A`–`D`), balanced answer distributions, and step-by-step explanations:
+     - `quiz_data/unit_1.py`: **Unit 1: Atomic Structure and Properties** (`7–9% of exam`, CED Topics `1.1`–`1.8`, 50 questions).
+     - `quiz_data/unit_2.py`: **Unit 2: Molecular and Ionic Compound Structure and Properties** (`7–9%`, CED Topics `2.1`–`2.7`, 50 questions).
+     - `quiz_data/unit_3.py`: **Unit 3: Intermolecular Forces and Properties** (`18–22%`, CED Topics `3.1`–`3.13`, 50 questions).
+     - `quiz_data/unit_4.py`: **Unit 4: Chemical Reactions** (`7–9%`, CED Topics `4.1`–`4.9`, 50 questions).
+     - `quiz_data/unit_5.py`: **Unit 5: Kinetics** (`7–9%`, CED Topics `5.1`–`5.11`, 50 questions).
+     - `quiz_data/unit_6.py`: **Unit 6: Thermochemistry** (`7–9%`, CED Topics `6.1`–`6.9`, 50 questions).
+     - `quiz_data/unit_7.py`: **Unit 7: Equilibrium** (`7–9%`, CED Topics `7.1`–`7.14`, 50 questions).
+     - `quiz_data/unit_8.py`: **Unit 8: Acids and Bases** (`11–15%`, CED Topics `8.1`–`8.10`, 50 questions).
+     - `quiz_data/unit_9.py`: **Unit 9: Thermodynamics and Electrochemistry** (`7–9%`, CED Topics `9.1`–`9.10`, 50 questions).
+
+2. **`quiz_engine.py` (Created)**
+   - Aggregates `quiz_data.unit_1` through `quiz_data.unit_9`, enriches all 450 questions with global IDs (`1..450`), unit metadata, 10-question set numbers (`1..5`), and letter keys (`A`–`D`), and provides the official **AP Chemistry Equations & Physical Constants Sheet** (`AP_REFERENCE_SHEET`).
+   - Exposes `get_all_payload()`, `get_units_summary()`, `get_unit_by_id(unit_id)`, and `get_question_by_id(q_id)`.
+
+3. **`app.py` (Modified)**
+   - Imported `quiz_engine` and added routes:
+     - `GET /quiz`: Renders `templates/quiz.html` with all 9 units, 450 questions, and the AP Reference Sheet.
+     - `GET /api/quiz/units`: Returns JSON summary of all 9 AP Chemistry units and topic counts.
+     - `GET /api/quiz/unit/<int:unit_id>`: Returns JSON for a single unit (`1..9`) and its 50 questions (404 if invalid).
+     - `GET /api/quiz/question/<int:q_id>`: Returns JSON for a single question (`1..450`, 404 if invalid).
+
+4. **`templates/quiz.html` (Created)**
+   - Built the Gray & White themed Quiz interface featuring:
+     - Top **Practice Mode Switcher** toggling between **Mode 1: 10 Questions at a Time (Score at End)** and **Mode 2: 1 Question at a Time (Instant Feedback)**.
+     - Collapsible **AP Chemistry Equations & Physical Constants Sheet** (`#ap-ref-drawer`) rendered with KaTeX.
+     - Sticky left **AP Chemistry Units (1–9) Sidebar** displaying each unit's title, official exam weight (`7–9%`, `18–22%`, `11–15%`), question count (`50 Qs`), and live mastery progress bar.
+     - Prominent charcoal **Unit Header Banner** (`#quiz-unit-banner`), CED Topic Filter dropdown, Difficulty filter, keyword search, Mode 1 set selector pills (`Set 1`–`Set 5` + `Random 10-Question Set`), score summary banner (`#batch-score-banner`), and Mode 2 interactive 50-question map grid (`#single-qgrid`).
+
+5. **`static/css/quiz.css` (Created)**
+   - Styled the mode switcher, reference sheet drawer, unit progress bars, 10-question set controls, score circle banner, stimulus data tables, option buttons (`is-selected`, `opt-correct-answer`, `opt-wrong-selected`), and explanation boxes in the application's gray and white theme, including `@supports not (accent-color: ...)` progressive enhancement fallbacks.
+
+6. **`static/js/quiz/quiz_app.js` (Created)**
+   - Implemented hash-routed unit navigation (`#/unit/<1-9>`), KaTeX math rendering (`$...$` and `$$...$$`), CED topic/difficulty/search filtering, Mode 1 batch set answering and end-of-set scoring with full answer/explanation reveal, Mode 2 single-question immediate evaluation and explanation reveal, and `localStorage` mastery persistence.
+
+7. **`templates/index.html`, `templates/orbitals.html`, `templates/reactions.html`, `README.md` (Modified)**
+   - Added `<a href="{{ url_for('quiz') }}" class="nav-link">AP Chemistry Quiz</a>` to the shared `.page-nav` header across all pages and documented `/quiz` in `README.md`.
+
+8. **`tests/test_quiz_engine.py` (Created)**
+   - Added unit and integration tests verifying all 9 units, exam weights, 450 questions, 91 CED topics, option/explanation schemas, and Flask routes (`/quiz`, `/api/quiz/units`, `/api/quiz/unit/<id>`, `/api/quiz/question/<id>`).
+
+---
+
+## 2026-10-03 — AP Chemistry Quiz Audit: Fall 2024 CED Alignment, Error Fixes, and 120 New Blind-Spot Questions (450 → 570)
+
+**Request:** "Check the quiz questions and see if those match the AP Chemistry level and see how much of the content do the questions cover. If there are any blind spots add more questions."
+
+### Overview of Changes
+- **Audit scope:** all 450 questions were reviewed, unit by unit, against the official College Board *AP Chemistry Course and Exam Description* (Effective Fall 2024; the June 2026 clarifications changed no content).
+- **Each question was checked for:** AP level, answer accuracy (every key and number recomputed), CED exclusion statements, Essential Knowledge (EK) coverage, science-practice mix, and answer-key balance.
+- **Verdict:** the original items were at genuine AP Exam level.
+- **Problems found:**
+  - 62 items with factual or numerical errors. In 8 of them, the keyed answer was false or did not follow from the item's own data (U1 Q4, U2 Q6, U5 Q40, U6 Q16/Q31/Q36, U8 Q21, U9 Q9).
+  - 36 items testing content excluded by the CED
+  - strongly skewed answer keys in Units 3 and 9 (for example, Unit 9 had 40 of 53 keys = A)
+  - no graphical or particulate figures at all
+  - a reference sheet that did not match the official 2025 equation sheet
+  - topic numbering from the superseded 2019 CED (7.13, 7.14, 9.6–9.10)
+- **Added:** 120 new questions targeted at the blind spots found. EK coverage rose from 225/241 (93%) to 241/241 (100%), and the bank went from 0 to 62 inline SVG figures.
+
+### Exact Changes Made by File
+
+1. **`quiz_data/unit_7.py`, `quiz_data/unit_8.py`, `quiz_data/unit_9.py`: restructure to the Fall 2024 CED**
+   - Old 7.13 (pH and solubility) moved to **8.11** (Unit 8 Q51–Q54).
+   - Old 7.14 (free energy of dissolution) moved to **9.6** (Unit 9 Q51–Q53).
+   - Unit 9 topics 9.6–9.10 renumbered to **9.7–9.11**.
+   - Topic titles in Units 1, 2, 3 and 5 renamed to the Fall 2024 wording.
+   - Fixed two string-escape bugs in `unit_8.py`: a `\a` in Q10 had become a BEL control character, and a `\t` in Q32 had become a TAB.
+
+2. **`quiz_data/unit_1.py` … `quiz_data/unit_9.py`: per-unit review**
+   - Every key was re-derived. Factual and numeric errors were fixed.
+   - Items testing CED-excluded content were rewritten in place, keeping the same topic and number.
+   - Options were re-ordered where needed for key balance, and numeric options sorted.
+   - Letter references in explanations ("Option A") were removed, and markdown `**`/`*` that rendered literally was replaced with HTML.
+   - New blind-spot questions were appended under an `Added 2026-10-03` header in each file.
+   - **Unit 1 (50 → 60):**
+     - Fixed Q4, Q6, Q11, Q28, Q46 and Q47.
+     - Rewrote Q9 (Br₂ molecular-ion spectrum, excluded by 1.2) as an Rb-isotope item, and Q35 (photoelectric effect, not in the CED) as Na⁺ vs Ne PES.
+     - Q51–Q60 add 4 SVGs: Li mass spectrum, particulate diagrams, Na PES on a log axis, IE₁ vs Z.
+     - New EKs covered: estimating from periodicity (1.7.A.3), electronegativity, quantitative Coulomb's law, and group reactivity trends.
+   - **Unit 2 (50 → 60):**
+     - Fixed Q6 (false key: electronegativity vs ionization energy), Q9, Q22 and Q32; fixed Lewis electron counts in Q36, Q39, Q41 and Q48; fixed Q49.
+     - Rewrote Q4 (Fajans' rules) and removed crystal-structure terms from Q17, Q24 and Q27 (2.3 exclusion).
+     - Re-ordered options in Q14, Q35, Q37 and Q42.
+     - Q51–Q60 add 4 SVGs: HCl and H₂/He₂ potential-energy curves, CsF lattice, Mg electron sea.
+   - **Unit 3 (50 → 80):**
+     - No wrong keys were found.
+     - Fixed data and explanations in Q1 (LDF strength comes from contact area), Q4 (ΔH°vap of COS was given at 25 °C, where COS is a gas), Q10, Q19, Q26, Q34 (Dye A/B/C renamed X/Y/Z), Q38, Q39 and Q49 (Cu²⁺ λmax ≈ 800 nm, not 635 nm). Also fixed the UNIT_META text and the 3.1/3.9/3.12 headers.
+     - Rewrote 7 items on excluded topics: Q22 (Graham's law), Q24 (van der Waals constants), Q25 (compressibility factor), Q40 (Henry's law), Q42 (IR functional groups), Q43 (microwave selection rule) and Q45 (photoelectric effect).
+     - Keys for Q1–Q50 rebalanced from A15/B26/C8/D1 to A12/B13/C13/D12 by re-ordering 11 items.
+     - Q51–Q65 (topics 3.1–3.6) add 6 SVGs: HCl dipole orientations, noncovalent sites in a folded protein, ionic vs metallic layer shift, crystalline vs amorphous solid, P vs T line, KE distributions. They also add real-gas data items.
+     - Q66–Q80 (topics 3.7–3.13) add 10 SVGs:
+     - acetone–water H-bond
+     - particulate dilution
+     - TLC plate with ruler
+     - pentane/heptane distillation curve
+     - NaCl/I₂ in water/hexane layers
+     - molecular energy levels
+     - EM spectrum
+     - to-scale atomic levels
+     - Beer–Lambert calibration line plus dilution
+     - measuring away from λ_max
+   - **Unit 4 (50 → 60):**
+     - Fixed Q2 (HCl was limiting, so no CO₂ could form), Q10, Q23, Q34 (impossible conductivity data) and Q42.
+     - Rewrote excluded content in Q21 (coordination chemistry / Lewis acids), Q38 (rote solubility rules), Q48 and a Q42 distractor (oxidizing/reducing-agent terms), and Q6/Q8 (precipitate now given or deduced).
+     - Re-ordered Q14, Q28 and Q33.
+     - Q51–Q60 add 4 SVGs: CaCl₂ dissolution, Pb(NO₃)₂ + KI precipitate, HCl/NaOH titration curve, strong vs weak acid. They also cover a gas-stoichiometry question, a titration-error question and a half-reaction balancing question.
+   - **Unit 5 (50 → 60):**
+     - Fixed Q40 (wrong slow step in the phosgene mechanism; key now Rate = k[Cl₂]^{3/2}[CO]), Q14, Q46 and Q24.
+     - Rewrote Q28 (Arrhenius-plot calculation, 5.6 exclusion) as an SVG energy profile, and Q42 (steady-state derivation) as a pre-equilibrium item.
+     - Re-ordered Q8, Q12, Q16 and Q25.
+     - Q51–Q60 add 5 SVGs: [A] and ln[A] vs t, collision containers, Maxwell–Boltzmann, two-step profile, enzyme-catalysed profile.
+   - **Unit 6 (50 → 60):**
+     - Fixed Q5, Q6, Q16 (key 60.0 → 60.9 °C), Q19, Q21, Q31 (data gave −171) and Q36 (391.5 keyed as 391).
+     - Rewrote Q5 and Q20 (internal energy / PV work, an excluded distinction) and the Q9/Q10 explanations (state functions, 6.9 exclusion).
+     - Fixed the Q40 letter reference.
+     - Q51–Q60 add 5 SVGs: endothermic energy diagram, metal/water temperature–time curve, calorimetry extrapolation, cooling curve, bond-enthalpy pathway.
+   - **Unit 7 (43 → 60):**
+     - Fixed Q3 (³⁷Cl is stable, so the item now uses ³⁶Cl), Q16 (Kp for H₂O(g)), Q18, Q23, Q42, Q24 and Q32.
+     - Rewrote Q21 (Kc↔Kp conversion, 7.3 exclusion) as a 7.6.A.4 item.
+     - Q44–Q60 add 11 SVGs: rate–time, Q–time, concentration–time, particulate and Ksp-curve figures. Every topic now has at least 4 items.
+   - **Unit 8 (54 → 70):**
+     - Fixed Q9, Q21 (titration table recomputed), Q31 and Q53.
+     - Rewrote Q40, Q43, Q45 and the Q50 explanation (buffer pH-change calculations, 8.9/8.10 exclusion); Q52 and Q54 (solubility as a function of pH, 8.11 exclusion); and Q15 (polyprotic species concentration).
+     - Q55–Q70 add 9 SVGs: four titration curves (including diprotic and weak base/strong acid), particulate diagrams, lactic acid, and a CaF₂ solubility-vs-pH graph.
+   - **Unit 9 (53 → 60):**
+     - Keys rebalanced from A40/B6/C3/D4 to A15/B15/C15/D15.
+     - Fixed Q1, Q4, Q9 (ΔS° now −146.4), Q11, Q16, Q19, Q34, Q36, Q38, Q43 and Q52. "Spontaneous" was replaced by "thermodynamically favored" throughout.
+     - Rewrote Q18 (organic kinetic vs thermodynamic product) as a CED 9.4 item, replaced a Q33 distractor that relied on +/− electrode labels (9.8 exclusion), and removed "reducing agent" wording from Q38.
+     - Q54–Q60 add 3 SVGs: Maxwell–Boltzmann vs T, ΔG° vs T, a Cu/Ag cell driven by a power supply. They also cover a qualitative Nernst / Le Châtelier item and electroplating error analysis.
+
+3. **`quiz_engine.py`**
+   - `AP_REFERENCE_SHEET` now mirrors the official *AP Chemistry Equations and Constants (Effective 2025)*:
+     - constants, unit conversions, metric prefixes and unit symbols
+     - the five official equation sections, each with its legend
+   - Added Coulomb's law, the combined gas law, Ka/Kb, pKw = pKa + pKb and I = q/t.
+   - Removed items that are not on the 2025 sheet: Graham's law, M₁V₁ = M₂V₂, e, eV, 62.36 L·Torr and kPa.
+   - All 103 TeX strings were verified with KaTeX.
+   - Every question now gets a stable `uid` (`u{unit}q{n}`) and a content hash `rev`, so saved progress survives renumbering and edits.
+
+4. **`templates/quiz.html`**
+   - The subtitle and sidebar show the per-unit question range dynamically.
+   - The reference drawer was rebuilt from the new sheet structure: constants table, conversions, prefixes, unit-symbol chips, and equation cards with legends.
+   - Topic placeholder now reads "All Unit Topics"; the Question Map range is now `#qgrid-range`; the Unit 3 tip was updated.
+
+5. **`static/css/quiz.css`**
+   - Styles for the new reference-sheet blocks (`.ref-subhead`, `.ref-conversion-list`, `.ref-prefix-table`, `.ref-unit-symbols`, `.ref-legend`).
+   - Responsive figure styles (`.quiz-figure-wrap`, `.quiz-figure`, figcaption, plus a fallback rule for any inline `<svg>` in the stimulus box), in the gray and white theme.
+
+6. **`static/js/quiz/quiz_app.js`**
+   - Progress is now saved under `inorganic_chem_ap_quiz_v2`, keyed by `uid`. Entries whose `rev` no longer matches are dropped, and the legacy v1 key is removed.
+   - "Question X of N", the jump list, the Question Map range and the set-count banner now use each unit's real size instead of a hard-coded 50.
+
+7. **`tests/test_quiz_engine.py`** (rewritten), now checking:
+   - the 91 Fall 2024 CED topic titles and per-unit counts (60/60/80/60/60/60/60/70/60 = 570)
+   - schema, `uid`/`rev`, and sequential numbering
+   - per-topic minimums (Unit 3 ≥ 5, others ≥ 4) and answer-key balance (18–32% per letter per unit)
+   - no control characters, and no `$` math inside SVG; every SVG has `role="img"` and an `aria-label`
+   - the official 2025 reference-sheet content
+   - lookups and Flask routes
+
+8. **`README.md`:** quiz description and project layout updated (570 questions, Fall 2024 CED, figures, 2025 equation sheet).
+
+**Verification:**
+- `validate_unit.py` passes for all 9 units: exact counts, at least 4 items per topic (Unit 3 at least 5), key balance, KaTeX parse of all math segments, SVG rules, no letter references.
+- `final_audit.py`: 570 questions and 0 near-duplicate pairs (token Jaccard ≥ 0.72).
+- Every new SVG was rendered (`svg_preview.py`) and inspected by its reviewer. The lead spot-checked about 20 figures and re-derived sample numeric keys.
+- `python -m unittest discover -s tests -v`: 13/13 OK.
+- Flask test client: `/quiz` returns 200 with 570 questions; units [60, 60, 80, 60, 60, 60, 60, 70, 60]; `/api/quiz/question/570` returns 200 and `/571` returns 404.
+- Headless Chrome via CDP rendered Unit 3 Q72, Unit 9 Q58, Unit 8 Q62 and Unit 1 Q57 in Mode 2:
+  - each shows "Question N of M (Unit u)", the SVG at 560 px, KaTeX rendered, and no raw `$`
+  - the reference drawer shows 103 KaTeX expressions with 0 errors
+  - the only console message was a pre-existing favicon 404
+- Per-unit review reports and pre-change backups are kept in the session scratch folder.
+
+---
+
+## 2026-10-03 — Google Cloud Run Redeployment with AP Chemistry Quiz (`haren-main` / `us-central1`)
+
+**Request:** "Ok deploy this app /Users/bharen/Documents/Code/schrodinger to the cloud run , refer to specs.md to see previous deployment."
+
+1. **`Dockerfile` (Modified)**
+   - Updated the container image build steps to include `quiz_engine.py` (`COPY app.py quantum_engine.py reactions_engine.py quiz_engine.py ./`) and the `quiz_data/` package (`COPY quiz_data ./quiz_data`) alongside `templates/` and `static/`.
+
+2. **Deployment & Verification**
+   - Deployed `/Users/bharen/Documents/Code/schrodinger` via Cloud Run MCP (`deploy_local_folder`) to project `haren-main`, region `us-central1`, service `inorganic-chemistry-introduction`.
+   - Live Service URL: `https://inorganic-chemistry-introduction-nad4p273qa-uc.a.run.app`
+
+---
+
+## 2026-10-03 — Compact Sticky Site Header (Maximum 10% Viewport Height)
+
+**Request:** "The header of the app is taking up too much space, the header should take maximum 10 percent height of the screen."
+
+1. **`templates/index.html` (Modified)**
+   - Moved `.header-controls` (the `Simulation View Mode` and `Real Historical Experiment Selection` segmented controls) out of the sticky `<header class="site-header">` and into a `.workspace-header-bar` at the top of `<section class="simulation-workspace">` inside `<main>`.
+
+2. **`templates/orbitals.html` (Modified)**
+   - Moved `.module-tabs-wrap` (`A · Schrödinger Derivation`, `B · 3D Orbital Viewer`, `C · Element Configurations`) out of `<header class="site-header">` and into `<section class="orb-hero">` inside `<main>`.
+
+3. **`static/css/style.css`, `static/css/orbitals.css`, `static/css/theme.css` (Modified)**
+   - Constrained `.site-header` and `.header-inner` with `max-block-size: 10vh; max-block-size: 10dvh;` and converted `.header-inner` (`padding-block: 0.38rem; padding-inline: 1.25rem; flex-wrap: nowrap;`) and `.brand-group` into a single-row inline layout (~48–52px tall, ~5–6% of desktop viewport height).
+   - Styled `.app-brand` and `.brand-group h1` (`font-size: clamp(0.92rem, 1.15vw, 1.08rem)`) inline with a subtle vertical divider (`::after`), hid `.site-header .badge-era` and `.site-header .subtitle` inside the sticky top bar, and compacted `.page-nav` / `.nav-link` (`padding-block: 0.3rem; font-size: 0.78rem; white-space: nowrap`).
+   - Added `.workspace-header-bar` styles in `static/css/style.css` and updated `scroll-padding-block-start: 72px` in `static/css/orbitals.css`.
+
+---
+
+## 2026-10-03 — Single-Line Unit & Section Sub-Bar (`.section-banner`)
+
+**Request:** "The sub bar is also too big, the one attached. Just a single line that mentions the title and has the navigation is enough."
+
+1. **`static/js/quiz/quiz_app.js` (Modified)**
+   - Updated `renderUnitBanner()` (`#quiz-unit-banner`) to render only the compact unit badge (`U1`–`U9`), the unit title (`<h2 class="section-banner-title">`), and the horizontal `← Unit` / `Unit →` navigation buttons on a single line.
+
+2. **`static/js/reactions/reactions_app.js` (Modified)**
+   - Updated `buildSectionBannerHtml()` (`#section-banner` and `#reaction-section-banner`) to render only the compact section number badge, the section title (`Section N: ...`), and the horizontal `← Section` / `Section →` navigation buttons on a single line.
+
+3. **`static/css/reactions.css` (Modified)**
+   - Converted `.section-banner` into a compact single-row flex bar (`padding: 0.5rem 0.9rem 0.55rem 1rem`), shrunk `.section-banner-num` from `88px × 88px` to `30px × 30px`, styled `.section-banner-title` as a single line (`font-size: clamp(1rem, 1.3vw, 1.18rem); white-space: nowrap`), hid `.section-banner-eyebrow`, `.section-banner-desc`, and `.section-banner-meta`, and laid out `.section-banner-nav` horizontally (`flex-direction: row`).
+
+---
+
+## 2026-10-03 — Per-Unit & Per-Mode Quiz Retakes, Live Timers, LocalStorage Attempt History & Past Performance Dashboard
+
+**Request:** "Allow the student to retake the quiz per section and per mode. However save all the statistics in localstorage as attempts. Keep track of time , correct answers. Create a section that shows your past performances in an easy to understand dashboard. Remove reset history button."
+
+1. **`templates/quiz.html` (Modified)**
+   - Removed the `↺ Reset History` button (`#btn-reset-progress`) from `.mode-bar-right` and added a `📊 Past Performance` jump button (`#btn-jump-dashboard` with live attempt counter `#nav-attempt-count`).
+   - Added live elapsed timer badges (`#batch-timer-badge` / `#batch-timer-val` in Mode 1 and `#single-timer-badge` / `#single-timer-val` in Mode 2) and explicit per-unit, per-mode retake controls (`#btn-retake-unit-batch` "↺ Retake Unit (Mode 1)", `#btn-clear-batch` "↺ Retake This Set", `#btn-save-single-attempt` "✓ Save Attempt", and `#btn-retake-unit-single` "↺ Retake Unit (Mode 2)"), plus an inline `#unit-attempt-strip` showing past attempt statistics for the active unit and mode.
+   - Added `<section class="quiz-dashboard-section" id="quiz-performance-dashboard">` featuring 4 KPI summary cards (`#dash-kpi-grid`), a 9-Unit × 2-Mode breakdown grid (`#dash-unit-matrix`) with one-click `↺ Retake Mode 1` and `↺ Retake Mode 2` buttons, and a filterable chronological attempt history table (`#dash-attempts-wrap`, filtered by `#dash-filter-unit` and `#dash-filter-mode`).
+
+2. **`static/js/quiz/quiz_app.js` (Modified)**
+   - Added persistent `localStorage` stores for historical attempts (`inorganic_chem_ap_quiz_attempts_v1`) and active per-unit, per-mode sessions (`inorganic_chem_ap_quiz_sessions_v1`).
+   - Separated active Mode 1 (`batchByUnitSet`) and Mode 2 (`singleByUnit`) state per unit so students can take and retake any unit in Mode 1 or Mode 2 independently while preserving all prior attempts.
+   - Implemented a 1-second active timer engine tracking `elapsedSec` per set in Mode 1 and per unit in Mode 2, recording `durationSec`, `correct`, `answered`, `total`, `pct`, `attemptNumber`, and ISO `timestamp` on every attempt submission or retake.
+   - Implemented `renderDashboard()` and `renderUnitAttemptStrip()` to display cumulative accuracy, AP score band estimates, study time/pace per question, per-unit/mode best & average scores, and chronological attempt logs.
+
+3. **`static/css/quiz.css` (Modified)**
+   - Added gray-and-white theme styles for `.quiz-timer-badge`, `.unit-attempt-strip`, `.quiz-dashboard-section`, `.dash-kpi-grid`, `.dash-unit-matrix`, `.dash-attempts-table`, `.attempt-mode-badge`, and `.attempt-score-pill`.
+
+4. **`tests/test_quiz_engine.py` (Modified)**
+   - Updated `test_flask_quiz_routes` to verify the presence of `quiz-performance-dashboard`, `btn-retake-unit-batch`, and `btn-retake-unit-single`, and the removal of `btn-reset-progress`.
+
+---
+
+## 2026-10-03 — First-Screen Username Prompt, Per-User Data Assignment & Google Cloud Storage (`haren-agent-storage`) Sync
+
+**Request:** "Ask for the user name in the first screen and assign the data to that user. Sync up the data in cloud storage haren-agent-storage , save the data there and once the user logs in with a particular username the data should be retrieved from cloud storage."
+
+1. **`cloud_storage.py` (Created)**
+   - Implemented the Google Cloud Storage synchronization engine targeting bucket `haren-agent-storage` (`gs://haren-agent-storage/inorganic-chemistry-introduction/users/<username>.json`):
+     - `normalize_username(raw)`: Sanitizes usernames to lowercase alphanumeric characters, underscores, dots, and hyphens (`1–64` characters).
+     - `_gcs_read_object(username)` and `_gcs_write_object(username, payload)`: Reads and writes per-user JSON objects in `gs://haren-agent-storage/inorganic-chemistry-introduction/users/<username>.json` using the official `google-cloud-storage` Python SDK (on Cloud Run) or the Google Cloud Storage JSON REST API with OAuth2 bearer tokens from the Metadata Server, Application Default Credentials (`~/.config/gcloud/application_default_credentials.json`), or `gcloud auth print-access-token` (with macOS `/etc/ssl/cert.pem` SSL context support), plus a local mirror under `.user_data_cache/<username>.json`.
+     - `merge_user_payloads(base, incoming)`: Non-destructively merges `history`, `attempts` (deduplicated by `id`, sorted chronologically, with sequential `attemptNumber` per `(unitId, mode, scopeKey)`), and active `sessions` (`batchByUnitSet` and `singleByUnit`).
+     - `get_user_data(username)` and `save_user_data(username, incoming_payload, merge=True)`: High-level load and save functions.
+
+2. **`app.py`, `Dockerfile`, `requirements.txt`, `.gitignore`, `.dockerignore` (Modified)**
+   - Added `GET /api/user/<username>` and `POST /api/user/<username>` in `app.py` to retrieve and persist a user's quiz history, attempts, and active sessions in `gs://haren-agent-storage`.
+   - Added `cloud_storage.py` to `Dockerfile`, `google-cloud-storage>=2.14.0,<4` to `requirements.txt`, and `.user_data_cache/` to `.gitignore` and `.dockerignore`.
+
+3. **`static/js/user_sync.js` (Created) & `static/css/theme.css` (Modified)**
+   - Prompts the student for their username on the first screen via a native `<dialog id="user-login-dialog">` modal (`showModal()`) whenever no active user is stored in `localStorage` (`inorganic_chem_active_user`), and injects a compact user profile chip (`#btn-switch-user` showing `👤 <username>`, Cloud Storage sync badge `☁️ Synced`, and `Switch User`) into `.site-header .header-inner` across all 4 pages while keeping `.site-header` `<= 10dvh`.
+   - Scopes all `localStorage` keys per user (`inorganic_chem_ap_quiz_v2__<username>`, `inorganic_chem_ap_quiz_attempts_v1__<username>`, `inorganic_chem_ap_quiz_sessions_v1__<username>`), migrates any pre-login un-scoped data once, fetches existing user data from `GET /api/user/<username>` (`haren-agent-storage`) upon login, merges and saves back via `POST /api/user/<username>`, and dispatches `inorganic-user-synced`.
+
+4. **`static/js/quiz/quiz_app.js` & `templates/index.html`, `templates/orbitals.html`, `templates/reactions.html`, `templates/quiz.html` (Modified)**
+   - Included `static/js/user_sync.js` across all 4 templates.
+   - Updated `quiz_app.js` (`loadHistory`, `saveHistory`, `loadAttempts`, `saveAttempts`, `loadSessions`, `saveSessions`) to read/write the active user's scoped keys, automatically push updates to `POST /api/user/<username>` (`haren-agent-storage`) when answers or attempts are saved, and reload all quiz & Past Performance Dashboard data whenever a user logs in or switches usernames (`inorganic-user-synced`).
+
+5. **`tests/test_quiz_engine.py` (Modified)**
+   - Added `test_user_cloud_storage_api_and_merge` verifying `user_sync.js` inclusion across all 4 pages and testing `GET /api/user/<username>` and `POST /api/user/<username>` profile retrieval and attempt merging.
+
+6. **Cloud Run Service Account IAM Access & Redeployment to `gs://haren-agent-storage` (`2026-10-03`)**
+   - Inspected Cloud Run service `inorganic-chemistry-introduction` (`project=haren-main`, `region=us-central1`), which runs as service account `78833623456-compute@developer.gserviceaccount.com`.
+   - Granted `roles/storage.objectAdmin` on bucket `gs://haren-agent-storage` (`us-central1`) to `serviceAccount:78833623456-compute@developer.gserviceaccount.com` via `gcloud storage buckets add-iam-policy-binding gs://haren-agent-storage --member="serviceAccount:78833623456-compute@developer.gserviceaccount.com" --role="roles/storage.objectAdmin" --project=haren-main`.
+   - Redeployed `inorganic-chemistry-introduction` to Cloud Run (revision `inorganic-chemistry-introduction-00003-str`, URL: `https://inorganic-chemistry-introduction-nad4p273qa-uc.a.run.app` / `https://inorganic-chemistry-introduction-78833623456.us-central1.run.app`).
+   - Verified end-to-end live `POST` and `GET` calls against `https://inorganic-chemistry-introduction-nad4p273qa-uc.a.run.app/api/user/<username>`, confirming `cloud_synced: True`, `cloud_error: None`, and object persistence in `gs://haren-agent-storage/inorganic-chemistry-introduction/users/<username>.json`.
+
+---
+
+## 2026-10-03 — Dedicated Performance Dashboard (`/dashboard`) with SVG Charts & Tables, plus Manual Quiz Timer Start/Pause/Resume & Leave-and-Resume Persistence
+
+**Request:** "The performance dashboard should be its own section, right now its on the quiz page it its too much clutter. Use more graphs and charts and tables instead of current format. Currently when you go to the quiz page the quiz timer starts immediately, make it so that it only starts after the user clicks the start button. Add resume and pause button. If the user leaves the page user should be able to resume from where he left."
+
+1. **`app.py` (Modified)**
+   - Added `@app.route("/dashboard")` (`def dashboard():`) rendering `templates/dashboard.html` with `payload`, `units`, `total_units`, and `total_questions`.
+
+2. **`templates/index.html`, `templates/orbitals.html`, `templates/reactions.html`, `templates/quiz.html` (Modified)**
+   - Added `<a href="{{ url_for('dashboard') }}" class="nav-link"><span>8</span> Performance Dashboard</a>` to `.page-nav` across all pages.
+   - Removed the inline `#quiz-performance-dashboard` section from `templates/quiz.html` so `/quiz` is completely focused on quiz practice without dashboard clutter, and updated `#btn-jump-dashboard` (`📊 Performance Dashboard`) to navigate directly to `/dashboard`.
+   - Added explicit timer control groups in both Mode 1 (`#btn-batch-timer-start`, `#btn-batch-timer-pause`, `#btn-batch-timer-resume`, `#batch-timer-state-tag`, `#batch-timer-dot`) and Mode 2 (`#btn-single-timer-start`, `#btn-single-timer-pause`, `#btn-single-timer-resume`, `#single-timer-state-tag`, `#single-timer-dot`), plus `<section class="quiz-timer-gate-banner" id="quiz-timer-gate-banner" hidden aria-live="polite"></section>`.
+
+3. **`templates/dashboard.html`, `static/css/dashboard.css`, `static/js/dashboard/dashboard_app.js` (Created)**
+   - Built the dedicated `/dashboard` section (`AP Chemistry Performance & Attempt Analytics Dashboard`) featuring:
+     - **5 KPI Summary Cards (`#dash-kpi-grid`)**: Saved Quiz Attempts, Cumulative Accuracy & AP Band, 570-Question Bank Mastery, Active Study Time & Average Pace, and Paused/Resumable Sessions count.
+     - **Active & Paused Quiz Sessions Table (`#dash-paused-table-wrap`)**: Lists all in-progress/paused Mode 1 sets and Mode 2 unit sessions with saved question progress (`X / Y`), elapsed time (`MM:SS`), and one-click `▶ Resume Quiz` (`/quiz?unit=X&mode=Y&set=Z&action=resume`) and `↺ Restart Fresh` links.
+     - **SVG Line & Area Chart (`#chart-accuracy-trend`)**: Plots chronological attempt accuracy (`0%–100%`) with shaded area, 3-attempt rolling average trend line, and AP Score 4 (`60%`) / AP Score 5 (`75%`) reference lines.
+     - **SVG Donut / Ring Chart & Breakdown Table (`#chart-bank-donut`)**: Visualizes the 570-question bank across *Mastered (Correct)*, *Needs Review (Incorrect)*, *In-Progress (Paused)*, and *Unseen Questions*.
+     - **SVG Grouped Bar Chart (`#chart-unit-bars`)**: Compares *Mode 1 Best (%)*, *Mode 2 Best (%)*, and *Bank Mastery (%)* across Units 1–9 (`U1`–`U9`).
+     - **SVG Horizontal Bar Chart (`#chart-unit-pace`)**: Compares average seconds per question (`s/Q`) across Units 1–9 against the `90s AP Target` vertical reference line.
+     - **Complete Units 1–9 & Mode Analytics Table (`#dash-unit-summary-table-wrap`)**: Sticky-header table displaying CED exam weight, question bank progress bar, Mode 1 & Mode 2 attempt counts/best/average/time, AP readiness band, pace, and one-click Open/Resume/Retake actions.
+     - **Chronological Attempt History Log Table (`#dash-attempts-table-wrap`)**: Filterable by Unit (`#dash-global-unit-filter`) and Mode (`#dash-global-mode-filter`) with Attempt #, timestamp, unit, mode/set scope, score pill, duration/pace, AP band, and `↺ Retake`.
+
+4. **`static/js/quiz/quiz_app.js`, `static/css/quiz.css`, `static/js/user_sync.js`, `cloud_storage.py` (Modified)**
+   - Updated quiz session state (`getBatchSession`, `getSingleSession`) to track `timerState` (`"not_started"` | `"running"` | `"paused"` | `"completed"`), `updatedAt`, and `sessions.lastLocation` (`{ mode, unitId, batchSetIndex, updatedAt }`).
+   - Changed the 1-second timer interval so `elapsedSec` **never** starts ticking automatically on page load or unit/mode/set switch; it only increments after the student clicks **`▶ Start Quiz`** (`startOrResumeActiveTimer()`).
+   - Added **`⏸ Pause`** (`pauseActiveTimer()`) and **`▶ Resume`** (`startOrResumeActiveTimer()`) controls in both Mode 1 and Mode 2 toolbars as well as in `#quiz-timer-gate-banner`.
+   - Locked unrevealed multiple-choice options while the timer is `"not_started"` or `"paused"`, prompting the student to click **`▶ Start Quiz`** or **`▶ Resume Quiz`** first.
+   - Added `pagehide`, `beforeunload`, and `visibilitychange` listeners (`pauseAllRunningSessions(true)`) and `saveSessions()` logic that automatically pauses any running timer and saves `lastLocation`, `elapsedSec`, `answers`, and `singleIndex` to `localStorage` and Cloud Storage (`haren-agent-storage`) whenever the user leaves `/quiz`.
+   - Added `applyInitialRouteAndResume()` and `findMostRecentResumableLocation()` so returning to `/quiz` (or clicking `▶ Resume` from `/dashboard`) automatically restores the exact unit, mode, set, question position, answers, and elapsed time in the `"paused"` state ready to resume.
+
+5. **`tests/test_quiz_engine.py` (Modified)**
+   - Updated `test_flask_quiz_routes` and `test_user_cloud_storage_api_and_merge` to verify `/dashboard` charts and tables, the removal of inline `#quiz-performance-dashboard` from `/quiz`, the presence of Start/Pause/Resume timer controls on `/quiz`, and `lastLocation` persistence across user profile syncs.
+
+6. **`templates/dashboard.html`, `static/css/theme.css`, `static/js/dashboard/dashboard_app.js` (Header & Storage Key Alignment Fix — `2026-10-03`)**
+   - Included `static/css/reactions.css`, `static/css/quiz.css`, and `static/css/theme.css` in `templates/dashboard.html` and matched the `.site-header > .header-inner > .brand-group` + `.page-nav` structure used by `templates/quiz.html` so the compact `<= 10dvh` header, gray-and-white theme controls, and `.user-header-chip` render cleanly without overflow.
+   - Aligned `static/js/dashboard/dashboard_app.js` storage keys (`inorganic_chem_ap_quiz_v2`, `inorganic_chem_ap_quiz_attempts_v1`, `inorganic_chem_ap_quiz_sessions_v1` via `window.InorganicUserSync`) and `Q_BY_UID` answer deserialization with `static/js/quiz/quiz_app.js`.
+
+---
+
+## 2026-10-03 — Replacement of All Top Headers with a Retractable Left Sidebar Navigation
+
+**Request:** "Replace all the header sections with a retractable side bar."
+
+1. **`templates/index.html`, `templates/orbitals.html`, `templates/reactions.html`, `templates/quiz.html`, `templates/dashboard.html` (Modified)**
+   - Replaced `<header class="site-header">...</header>` across all 5 application pages with `<aside class="site-sidebar" id="site-sidebar" aria-label="Application Sidebar Navigation">`:
+     - **`.sidebar-top`**: Contains the `.sidebar-brand` (`IC` monogram badge + `Inorganic Chemistry` title + `AP & Quantum Lab` subtitle) and the `#btn-toggle-sidebar` (`«` / `»`) retract/expand button (`title="Retract / Expand Sidebar (Ctrl+B)"`).
+     - **`.sidebar-page-context`**: Displays the current page's `.badge-era`, `<h1>` heading, and `<p class="subtitle">` when the sidebar is expanded.
+     - **`<nav class="page-nav" aria-label="Sections">`**: Vertical navigation rail with numbered section badges (`01`–`05`) and full labels for *Rutherford & Thomson Experiments* (`/`), *Atomic Orbitals & Quantum Mechanics* (`/orbitals`), *Essential Chemical Reactions* (`/reactions`), *AP Chemistry Quiz* (`/quiz`), and *Performance Dashboard* (`/dashboard`).
+     - **`<div class="sidebar-footer" id="sidebar-user-mount"></div>`**: Dedicated bottom footer mount for the student username and Cloud Storage (`haren-agent-storage`) sync chip.
+
+2. **`static/js/user_sync.js` (Modified)**
+   - Added `SIDEBAR_COLLAPSED_KEY = "inorganic_chem_sidebar_collapsed"`, `applySidebarCollapsedState(isCollapsed)`, `loadSidebarCollapsedState()`, and `initRetractableSidebar()` to persist the retracted/expanded state across page loads, toggle `sidebar-collapsed` on `document.documentElement` and `document.body` via `#btn-toggle-sidebar` or `Ctrl+B`/`Cmd+B`, update `aria-expanded` and `.sidebar-toggle-icon` (`«` vs `»`), and dispatch `window.resize` events so HTML5/WebGL canvases resize automatically.
+   - Updated `injectHeaderUserChip()` to mount `#header-user-bar` inside `#sidebar-user-mount` at the bottom of `.site-sidebar`.
+
+3. **`static/css/style.css`, `static/css/theme.css`, `static/css/orbitals.css` (Modified)**
+   - Defined `:root { --sidebar-width: 260px; }` and `html.sidebar-collapsed, body.sidebar-collapsed { --sidebar-width: 60px; }` with `body { padding-inline-start: var(--sidebar-width, 260px); transition: padding-inline-start 0.2s ease; }`.
+   - Styled the gray-and-white `.site-sidebar` in both **Expanded (`260px`)** and **Retracted (`60px` compact icon/badge rail)** states, hiding text labels and centering the `IC` brand mark, `01`–`05` badges, and `👤` user profile chip when retracted.
+   - Updated `scroll-padding-block-start` in `static/css/orbitals.css` from `72px` to `16px`.
+
+4. **`tests/test_quiz_engine.py` (Modified)**
+   - Added `test_all_pages_render_retractable_sidebar` verifying that all 5 routes (`/`, `/orbitals`, `/reactions`, `/quiz`, `/dashboard`) render `.site-sidebar`, `#btn-toggle-sidebar`, and `#sidebar-user-mount` and contain no legacy `<header class="site-header">`.
+
+---
+
+## 2026-10-03 — Sidebar Submenus (`Chemistry Topics` & `AP Chemistry Quiz` Units 1–9), Atom SVG Brand, Compact `AP Chemistry` Top Header with Lab Equipment SVGs, and Default Instant Feedback Mode with `Timed Mode` Toggle
+
+**Request:**
+1. Remove the `.sidebar-page-context` text block (`COLLEGE BOARD AP CHEMISTRY CED...`) from the sidebar top.
+2. Put `01 Rutherford & Thomson Experiments`, `02 Atomic Orbitals & Quantum Mechanics`, and `03 Essential Chemical Reactions` as sub-topics under main `Chemistry Topics` in the sidebar.
+3. Put all 9 AP Chemistry Quiz units (`U1`–`U9`) as a submenu under `AP Chemistry Quiz` in the sidebar, and remove the quiz units sidebar from the main central area on `/quiz`.
+4. Inside `/quiz`, remove the top mode bar, make **Instant Feedback** mode (`single`) the default, and add a **`Timed Mode`** button (`#btn-toggle-timed-mode`) that toggles to the timed batch quiz mode (`batch`) and allows reverting back to Instant Feedback mode at any time (`#btn-toggle-timed-mode` / `#btn-revert-instant-mode`).
+5. Keep a compact top header (`<= 10%` viewport height) with **`AP Chemistry`** as the App Title and a row of chemistry laboratory equipment and atomic SVGs (Atom, Test Tube, Erlenmeyer Flask, Graduated Beaker, Bunsen Burner, Florence Boiling Flask, Volumetric Burette, Test Tube Rack, Benzene Ring).
+6. Remove `Inorganic Chemistry / AP & Quantum Lab` from the sidebar top and replace it with an SVG image of an atom (`.sidebar-atom-svg`: nucleus with 3 intersecting elliptical orbits and orbiting electrons).
+
+### Exact Changes Made by File
+
+1. **`app.py` (Modified)**
+   - Added `@app.context_processor` (`inject_navigation_units()`) so `nav_units` (all 9 official AP Chemistry units) is injected into every page template for the global sidebar submenu.
+
+2. **`templates/_chrome.html` (Created) & `templates/index.html`, `templates/orbitals.html`, `templates/reactions.html`, `templates/quiz.html`, `templates/dashboard.html` (Modified)**
+   - Created `templates/_chrome.html` and included it across all 5 templates:
+     - **Sidebar Top (`.sidebar-top`)**: Replaced `[Inorganic Chemistry AP & Quantum Lab]` with `.sidebar-atom-svg` (central proton/neutron nucleus cluster with 3 intersecting elliptical orbits and electrons) alongside `#btn-toggle-sidebar`.
+     - **Removed `.sidebar-page-context`** text block from the sidebar.
+     - **`Chemistry Topics` Group (`#sidebar-group-topics`)**: Collapsible `<details open>` group containing sub-topic links `01 Rutherford & Thomson Experiments` (`/`), `02 Atomic Orbitals & Quantum Mechanics` (`/orbitals`), and `03 Essential Chemical Reactions` (`/reactions`).
+     - **`AP Chemistry Quiz` Group (`#sidebar-group-quiz`)**: Collapsible `<details open>` group containing `#quiz-unit-sidebar` with all 9 AP Chemistry units (`U1`–`U9`), linking directly to `#/unit/<id>` on `/quiz` or `/quiz?unit=<id>` from other pages.
+     - **`05 Performance Dashboard`**: Top-level link to `/dashboard`.
+     - **Compact Top Header (`<header class="site-header" id="site-header">`, `block-size: 54px; max-block-size: 10dvh`)**: Displays the **`AP Chemistry`** app title and `.header-lab-svgs` containing 9 vector SVGs (Atom, Test Tube, Erlenmeyer Flask, Graduated Beaker, Bunsen Burner, Round-Bottom Florence Flask, Titration Burette, Test Tube Rack, and Molecular Benzene Ring).
+
+3. **`templates/quiz.html`, `static/js/quiz/quiz_app.js`, `static/css/quiz.css`, `static/css/theme.css` (Modified)**
+   - Removed `<section class="quiz-mode-bar">` and `<aside class="catalog-sidebar quiz-sidebar">` from `templates/quiz.html`, making `.quiz-layout-single-col` full-width in the central area.
+   - Changed default `state.mode` in `static/js/quiz/quiz_app.js` to `"single"` (**Instant Feedback Mode**) and made `#single-controls-panel` visible by default.
+   - Added `#btn-toggle-timed-mode` (`⏱ Timed Mode` ↔ `← Instant Feedback Mode`) in `.quiz-filters-row` and `#btn-revert-instant-mode` (`← Instant Feedback Mode`) in `#batch-controls-panel` so students can switch to Timed Mode (`batch`) and revert to Instant Feedback Mode (`single`) at any time.
+   - Added click handling on `#quiz-unit-sidebar` in `static/js/quiz/quiz_app.js` to switch units in-place when on `/quiz`.
+
+4. **`tests/test_quiz_engine.py` (Modified)**
+   - Updated `test_flask_quiz_routes` and `test_all_pages_render_retractable_sidebar` to verify all 6 requirements across all 5 routes.
+

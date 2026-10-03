@@ -368,22 +368,11 @@
     return haystack.includes(q);
   }
 
-  /** Large, high-contrast header shown at the start of every section (and reaction) view. */
+  /** Single-line section header with title and Prev/Next navigation. */
   function buildSectionBannerHtml(cat, { compact = false, headingId = "section-heading" } = {}) {
     const idx = Number(cat.id);
-    const list = reactionsInSection(idx);
-    const nIonic = list.filter((r) => r.equations?.net_ionic || r.equations?.complete_ionic).length;
-    const nRedox = list.filter((r) => r.equations?.reduction_half || r.equations?.oxidation_half).length;
     const prevCat = CAT_BY_ID.get(idx - 1);
     const nextCat = CAT_BY_ID.get(idx + 1);
-
-    const stats =
-      idx === SUMMARY_SECTION_ID
-        ? `<span class="section-banner-stat"><strong>${PAYLOAD.canonical_summary?.length || 9}</strong> reaction archetypes</span>
-           <span class="section-banner-stat"><strong>${list.length}</strong> added 1st-year reactions</span>`
-        : `<span class="section-banner-stat"><strong>${list.length}</strong> reactions</span>
-           ${nIonic ? `<span class="section-banner-stat"><strong>${nIonic}</strong> with ionic equations</span>` : ""}
-           ${nRedox ? `<span class="section-banner-stat"><strong>${nRedox}</strong> with half-reactions</span>` : ""}`;
 
     const nav = compact
       ? ""
@@ -403,13 +392,7 @@
     return `
       <div class="section-banner-num" aria-hidden="true">${idx}</div>
       <div class="section-banner-body">
-        <div class="section-banner-eyebrow">Section ${idx} of ${TOTAL_SECTIONS} · ${escapeHtml(cat.short || "")}</div>
-        <h2 class="section-banner-title" id="${headingId}" tabindex="-1">${escapeHtml(sectionTitle(cat))}</h2>
-        ${compact ? "" : `<p class="section-banner-desc">${escapeHtml(cat.description || "")}</p>`}
-        <div class="section-banner-meta">
-          <span class="section-banner-pattern">${escapeHtml(cat.pattern || "")}</span>
-          ${stats}
-        </div>
+        <h2 class="section-banner-title" id="${headingId}" tabindex="-1">Section ${idx}: ${escapeHtml(sectionTitle(cat))}</h2>
       </div>
       ${nav}`;
   }

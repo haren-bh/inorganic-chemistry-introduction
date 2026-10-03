@@ -20,34 +20,20 @@
   </script>
 </head>
 <body class="orbitals-page">
-  <header class="site-header">
-    <div class="header-inner">
-      <div class="brand-group">
-        <a class="app-brand" href="{{ url_for('index') }}">Inorganic Chemistry: Introduction</a>
-        <span class="badge-era">SCHRÖDINGER • 1926 → TODAY</span>
-        <h1>Atomic Orbitals &amp; Quantum Mechanics</h1>
-        <p class="subtitle">From Schrödinger’s equation to s, p, d, f orbitals and the electron configurations of all 118 elements</p>
-      </div>
-      <nav class="page-nav" aria-label="Sections">
-        <a href="{{ url_for('index') }}" class="nav-link">Rutherford &amp; Thomson Experiments</a>
-        <a href="{{ url_for('orbitals') }}" class="nav-link active" aria-current="page">Atomic Orbitals &amp; Quantum Mechanics</a>
-        <a href="{{ url_for('reactions') }}" class="nav-link">Essential Chemical Reactions</a>
-      </nav>
-    </div>
-    <div class="module-tabs-wrap">
-      <nav class="module-tabs" aria-label="Modules">
-        <a href="#module-a">A · Schrödinger Derivation</a>
-        <a href="#module-b">B · 3D Orbital Viewer</a>
-        <a href="#module-c">C · Element Configurations</a>
-      </nav>
-    </div>
-  </header>
+  {% include '_chrome.html' %}
 
   <main class="main-container">
     <!-- ================================================================ -->
     <!-- Narrative intro                                                    -->
     <!-- ================================================================ -->
     <section class="orb-hero" aria-label="Overview">
+      <div class="module-tabs-wrap">
+        <nav class="module-tabs" aria-label="Modules">
+          <a href="#module-a">A · Schrödinger Derivation</a>
+          <a href="#module-b">B · 3D Orbital Viewer</a>
+          <a href="#module-c">C · Element Configurations</a>
+        </nav>
+      </div>
       <div class="hero-flow">
         <div class="flow-step"><span class="flow-num">1</span><strong>Coulomb potential</strong><span>Electron bound to a +Ze nucleus (Rutherford’s nucleus!)</span></div>
         <div class="flow-arrow" aria-hidden="true">→</div>
@@ -423,6 +409,7 @@
     window.ELEMENTS = {{ elements | tojson }};
     window.MADELUNG = {{ madelung | tojson }};
   </script>
+  <script src="{{ url_for('static', filename='js/user_sync.js') }}"></script>
   <script type="module" src="{{ url_for('static', filename='js/orbitals/orbitals_app.js') }}"></script>
 </body>
 </html>

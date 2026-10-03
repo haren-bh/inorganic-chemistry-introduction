@@ -1,0 +1,485 @@
+/* ==========================================================================
+   AP Chemistry Performance Dashboard Styles (Gray & White Theme)
+   ========================================================================== */
+
+.dashboard-page {
+  background-color: #f3f4f6;
+  color: #111827;
+  accent-color: #374151;
+}
+
+.dashboard-page [hidden] {
+  display: none !important;
+}
+
+.dashboard-container {
+  max-width: 1560px;
+  margin: 0 auto;
+  padding: 1.25rem 1.5rem 3rem;
+}
+
+@media (max-width: 768px) {
+  .dashboard-container {
+    padding: 0.9rem 0.9rem 2rem;
+  }
+}
+
+.dashboard-main {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* ---------- Top Control Bar ---------- */
+.dash-top-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.1rem 1.4rem;
+  border-radius: 16px;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  box-shadow: var(--shadow-card);
+}
+
+.dash-top-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.dash-eyebrow {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #4b5563;
+}
+
+.dash-page-title {
+  margin: 0;
+  font-size: clamp(1.15rem, 1.8vw, 1.4rem);
+  font-weight: 800;
+  color: #111827;
+}
+
+.dash-top-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.85rem;
+}
+
+.dash-filter-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.dash-filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.22rem;
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #4b5563;
+}
+
+/* ---------- KPI Summary Cards Grid ---------- */
+.dash-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.9rem;
+}
+
+.dash-kpi-card {
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 14px;
+  padding: 1rem 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  box-shadow: var(--shadow-card);
+}
+
+.dash-kpi-label {
+  font-size: 0.71rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #6b7280;
+}
+
+.dash-kpi-val {
+  font-size: 1.65rem;
+  font-weight: 850;
+  color: #111827;
+  line-height: 1.12;
+  font-variant-numeric: tabular-nums;
+}
+
+.dash-kpi-sub {
+  font-size: 0.79rem;
+  color: #4b5563;
+  line-height: 1.38;
+}
+
+/* ---------- Generic Dashboard Section Cards ---------- */
+.dash-card {
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 16px;
+  padding: 1.25rem 1.4rem;
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.dash-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.dash-section-tag {
+  display: block;
+  font-size: 0.69rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6b7280;
+  margin-bottom: 0.15rem;
+}
+
+.dash-card-head h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #111827;
+}
+
+.dash-card-meta {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #4b5563;
+}
+
+/* ---------- Charts Grid Layout ---------- */
+.dash-charts-row {
+  display: grid;
+  gap: 1.2rem;
+}
+
+.dash-charts-row-top {
+  grid-template-columns: 1.45fr 1fr;
+}
+
+.dash-charts-row-bottom {
+  grid-template-columns: 1.35fr 1fr;
+}
+
+@media (max-width: 1120px) {
+  .dash-charts-row-top,
+  .dash-charts-row-bottom {
+    grid-template-columns: 1fr;
+  }
+}
+
+.dash-chart-card {
+  min-height: 340px;
+}
+
+.chart-legend-inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.legend-swatch {
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
+}
+
+.swatch-primary {
+  background: #111827;
+}
+
+.swatch-rolling {
+  background: #4b5563;
+  border: 1px dashed #111827;
+}
+
+.swatch-ap5 {
+  background: #10b981;
+}
+
+.swatch-m1 {
+  background: #1f2937;
+}
+
+.swatch-m2 {
+  background: #6b7280;
+}
+
+.swatch-bank {
+  background: #10b981;
+}
+
+.dash-svg-stage {
+  width: 100%;
+  min-height: 260px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.dash-svg-chart {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+
+/* ---------- Donut Chart Layout ---------- */
+.dash-donut-layout {
+  display: grid;
+  grid-template-columns: 210px 1fr;
+  align-items: center;
+  gap: 1.25rem;
+  min-height: 250px;
+}
+
+@media (max-width: 640px) {
+  .dash-donut-layout {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+}
+
+.donut-svg-wrap {
+  width: 200px;
+  height: 200px;
+  position: relative;
+}
+
+.donut-breakdown-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.donut-breakdown-table th,
+.donut-breakdown-table td {
+  padding: 0.48rem 0.6rem;
+  border-bottom: 1px solid #f3f4f6;
+  text-align: left;
+  font-variant-numeric: tabular-nums;
+}
+
+.donut-breakdown-table th {
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #6b7280;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.donut-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 0.45rem;
+  vertical-align: middle;
+}
+
+/* ---------- Responsive Scrollable Data Tables with Sticky Headers ---------- */
+.dash-table-scroll {
+  overflow-x: auto;
+  max-height: 540px;
+  overflow-y: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.dash-data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.83rem;
+  text-align: left;
+  font-variant-numeric: tabular-nums;
+}
+
+.dash-data-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #f3f4f6;
+  color: #374151;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.7rem 0.85rem;
+  border-bottom: 1px solid #d1d5db;
+  white-space: nowrap;
+}
+
+.dash-data-table tbody td {
+  padding: 0.68rem 0.85rem;
+  border-bottom: 1px solid #f3f4f6;
+  color: #1f2937;
+  vertical-align: middle;
+}
+
+.dash-data-table tbody tr:hover {
+  background: #f9fafb;
+}
+
+.dash-data-table tbody tr.is-highlighted-row {
+  background: #fffbeb;
+}
+
+/* ---------- Table Badges, Pills & Mini Progress Bars ---------- */
+.unit-tag-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  padding: 0.16rem 0.45rem;
+  border-radius: 6px;
+  font-size: 0.74rem;
+  font-weight: 800;
+  background: #111827;
+  color: #ffffff;
+  margin-right: 0.45rem;
+}
+
+.table-mini-bar-wrap {
+  width: 100%;
+  max-width: 120px;
+  height: 6px;
+  border-radius: 999px;
+  background: #e5e7eb;
+  overflow: hidden;
+  margin-top: 0.25rem;
+}
+
+.table-mini-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: #111827;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.58rem;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.status-badge.badge-paused {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+.status-badge.badge-high {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-badge.badge-mid {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-badge.badge-low {
+  background: #ffe4e6;
+  color: #9f1239;
+}
+
+.status-badge.badge-neutral {
+  background: #f3f4f6;
+  color: #4b5563;
+  border: 1px solid #e5e7eb;
+}
+
+.table-actions-cell {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.dash-action-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  padding: 0.32rem 0.65rem;
+  border-radius: 7px;
+  border: 1px solid #d1d5db;
+  background: #f9fafb;
+  color: #111827;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: all 0.14s ease;
+}
+
+.dash-action-link:hover {
+  background: #111827;
+  border-color: #111827;
+  color: #ffffff;
+}
+
+.dash-action-link.is-primary {
+  background: #111827;
+  border-color: #111827;
+  color: #ffffff;
+}
+
+.dash-action-link.is-primary:hover {
+  background: #374151;
+  border-color: #374151;
+}
+
+.dash-empty-state {
+  padding: 1.75rem 1.25rem;
+  text-align: center;
+  color: #4b5563;
+  font-size: 0.88rem;
+  background: #f9fafb;
+  border-radius: 10px;
+  border: 1px dashed #d1d5db;
+}

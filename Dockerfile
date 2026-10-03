@@ -9,7 +9,8 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY app.py quantum_engine.py reactions_engine.py ./
+COPY app.py quantum_engine.py reactions_engine.py quiz_engine.py cloud_storage.py ./
+COPY quiz_data ./quiz_data
 COPY templates ./templates
 COPY static ./static
 

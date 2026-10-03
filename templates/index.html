@@ -8,45 +8,34 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
 </head>
 <body>
-  <header class="site-header">
-    <div class="header-inner">
-      <div class="brand-group">
-        <a class="app-brand" href="{{ url_for('index') }}">Inorganic Chemistry: Introduction</a>
-        <span class="badge-era">MANCHESTER • 1909–1911</span>
-        <h1>Rutherford’s Gold Leaf Experiment</h1>
-        <p class="subtitle">
-          Interactive Geiger–Marsden Alpha Particle Scattering Simulation &amp; the Birth of Nuclear Physics
-        </p>
-      </div>
-
-      <nav class="page-nav" aria-label="Sections">
-        <a href="{{ url_for('index') }}" class="nav-link active" aria-current="page">Rutherford &amp; Thomson Experiments</a>
-        <a href="{{ url_for('orbitals') }}" class="nav-link">Atomic Orbitals &amp; Quantum Mechanics</a>
-        <a href="{{ url_for('reactions') }}" class="nav-link">Essential Chemical Reactions</a>
-      </nav>
-
-      <div class="header-controls">
-        <div class="segmented-control" role="group" aria-label="Simulation View Mode">
-          <button type="button" class="seg-btn active" data-view="split">Split View (Macro + Zoom)</button>
-          <button type="button" class="seg-btn" data-view="macro">Apparatus Setup</button>
-          <button type="button" class="seg-btn" data-view="atomic">Subatomic / Field Zoom</button>
-        </div>
-
-        <div class="segmented-control model-toggle" role="group" aria-label="Real Historical Experiment Selection">
-          <button type="button" class="seg-btn active" data-model="rutherford">
-            Rutherford Gold Leaf (1909)
-          </button>
-          <button type="button" class="seg-btn" data-model="thomson_crt">
-            Thomson Cathode Ray Tube (1897)
-          </button>
-        </div>
-      </div>
-    </div>
-  </header>
+  {% include '_chrome.html' %}
 
   <main class="main-container">
     <!-- Interactive Simulation Section -->
     <section class="simulation-workspace" aria-label="Interactive Experiment Animation">
+      <div class="workspace-header-bar">
+        <div class="workspace-header-meta">
+          <span class="badge-era">MANCHESTER • 1909–1911</span>
+          <span class="workspace-header-sub">Interactive Geiger–Marsden Alpha Particle Scattering Simulation &amp; the Birth of Nuclear Physics</span>
+        </div>
+        <div class="header-controls">
+          <div class="segmented-control" role="group" aria-label="Simulation View Mode">
+            <button type="button" class="seg-btn active" data-view="split">Split View (Macro + Zoom)</button>
+            <button type="button" class="seg-btn" data-view="macro">Apparatus Setup</button>
+            <button type="button" class="seg-btn" data-view="atomic">Subatomic / Field Zoom</button>
+          </div>
+
+          <div class="segmented-control model-toggle" role="group" aria-label="Real Historical Experiment Selection">
+            <button type="button" class="seg-btn active" data-model="rutherford">
+              Rutherford Gold Leaf (1909)
+            </button>
+            <button type="button" class="seg-btn" data-model="thomson_crt">
+              Thomson Cathode Ray Tube (1897)
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- Top Control & Telemetry Ribbon -->
       <div class="control-bar">
         <div class="control-group actions-group">
@@ -875,6 +864,7 @@
     window.EXPERIMENT_PARTS = {{ parts | tojson }};
     window.TARGET_ELEMENTS = {{ targets | tojson }};
   </script>
+  <script src="{{ url_for('static', filename='js/user_sync.js') }}"></script>
   <script src="{{ url_for('static', filename='js/simulation.js') }}"></script>
 </body>
 </html>

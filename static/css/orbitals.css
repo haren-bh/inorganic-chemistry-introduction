@@ -15,13 +15,11 @@
 /* Navigation (.page-nav / .nav-link) lives in style.css — shared by both pages */
 
 .module-tabs-wrap {
-  border-block-start: 1px solid var(--border-subtle);
+  border-block-end: 1px solid var(--border-subtle);
+  padding-block-end: 0.35rem;
 }
 
 .module-tabs {
-  max-inline-size: 1520px;
-  margin-inline: auto;
-  padding-inline: 1.5rem;
   display: flex;
   flex-wrap: wrap;
   gap: 1.25rem;
@@ -32,13 +30,13 @@
   text-decoration: none;
   font-size: 0.8rem;
   font-weight: 600;
-  padding-block: 0.5rem;
+  padding-block: 0.35rem;
   border-block-end: 2px solid transparent;
 }
 
 .module-tabs a:hover { color: var(--accent-gold); border-block-end-color: var(--accent-gold); }
 
-html { scroll-behavior: smooth; scroll-padding-block-start: 150px; }
+html { scroll-behavior: smooth; scroll-padding-block-start: 16px; }
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }

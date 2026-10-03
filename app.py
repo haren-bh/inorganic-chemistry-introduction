@@ -3,13 +3,16 @@ Inorganic Chemistry: Introduction — Flask web application featuring:
 1. Rutherford's Gold Leaf Scattering & Thomson's Cathode Ray Experiments
 2. Atomic Orbitals & Quantum Mechanics (Schrödinger equation, 3D viewer, Z=1–118)
 3. Essential Chemical & Ionic Equations (206 reactions across 12 sections with lab simulator)
+4. AP Chemistry Practice & Exam Quiz (450 exam-level questions across Units 1–9 with 2 practice modes)
 """
 
 import math
 import os
 from flask import Flask, jsonify, render_template, request
 
+import cloud_storage
 import quantum_engine
+import quiz_engine
 import reactions_engine
 
 app = Flask(__name__)
@@ -192,6 +195,15 @@ def compute_rutherford_scattering(z_target: int, energy_mev: float, impact_param
     }
 
 
+@app.context_processor
+def inject_navigation_units():
+    """Provide the 9 AP Chemistry units to the global sidebar navigation across all pages."""
+    payload = quiz_engine.get_all_payload()
+    return {
+        "nav_units": payload["units"],
+    }
+
+
 @app.route("/")
 def index():
     """Render the interactive Rutherford Gold Leaf Experiment web application."""
@@ -199,6 +211,7 @@ def index():
         "index.html",
         parts=EXPERIMENT_PARTS,
         targets=TARGET_ELEMENTS,
+        active_page="index",
     )
 
 
@@ -287,9 +300,95 @@ def api_reaction(rxn_id: int):
     return jsonify(rxn)
 
 
+@app.route("/quiz")
+def quiz():
+    """Render the AP Chemistry Practice & Exam Quiz section (Units 1–9, 570 questions)."""
+    payload = quiz_engine.get_all_payload()
+    return render_template(
+        "quiz.html",
+        payload=payload,
+        units=payload["units"],
+        total_units=payload["total_units"],
+        total_questions=payload["total_questions"],
+        reference_sheet=payload["reference_sheet"],
+    )
+
+
+@app.route("/dashboard")
+def dashboard():
+    """Render the dedicated AP Chemistry Performance & Analytics Dashboard section."""
+    payload = quiz_engine.get_all_payload()
+    return render_template(
+        "dashboard.html",
+        payload=payload,
+        units=payload["units"],
+        total_units=payload["total_units"],
+        total_questions=payload["total_questions"],
+    )
+
+
+
+@app.route("/api/quiz/units", methods=["GET"])
+def api_quiz_units():
+    """Return metadata for all 9 AP Chemistry units."""
+    payload = quiz_engine.get_all_payload()
+    return jsonify({
+        "total_units": payload["total_units"],
+        "total_questions": payload["total_questions"],
+        "units": payload["units"],
+    })
+
+
+@app.route("/api/quiz/unit/<int:unit_id>", methods=["GET"])
+def api_quiz_unit(unit_id: int):
+    """Return metadata and all 50 practice questions for a specific AP Chemistry unit (1..9)."""
+    unit_data = quiz_engine.get_unit_by_id(unit_id)
+    if unit_data is None:
+        return jsonify({"error": f"AP Chemistry Unit {unit_id} not found (must be 1–9)"}), 404
+    return jsonify(unit_data)
+
+
+@app.route("/api/quiz/question/<int:q_id>", methods=["GET"])
+def api_quiz_question(q_id: int):
+    """Return a single enriched AP Chemistry question by global ID (1..450)."""
+    q = quiz_engine.get_question_by_id(q_id)
+    if q is None:
+        return jsonify({"error": f"Question {q_id} not found"}), 404
+    return jsonify(q)
+
+
+@app.route("/api/user/<username>", methods=["GET"])
+def api_get_user_data(username: str):
+    """Retrieve a user's saved quiz progress and attempt history from Cloud Storage (haren-agent-storage)."""
+    norm = cloud_storage.normalize_username(username)
+    if not norm:
+        return jsonify({"error": "Invalid username. Please enter 1–64 letters, numbers, or hyphens."}), 400
+    try:
+        result = cloud_storage.get_user_data(username)
+        return jsonify(result)
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+
+
+@app.route("/api/user/<username>", methods=["POST"])
+def api_save_user_data(username: str):
+    """Save and sync a user's quiz progress and attempt history to Cloud Storage (haren-agent-storage)."""
+    norm = cloud_storage.normalize_username(username)
+    if not norm:
+        return jsonify({"error": "Invalid username. Please enter 1–64 letters, numbers, or hyphens."}), 400
+    payload = request.get_json(silent=True) or {}
+    merge = bool(payload.get("merge", True))
+    try:
+        result = cloud_storage.save_user_data(username, payload, merge=merge)
+        return jsonify(result)
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", "5000"))
     host = os.environ.get("HOST", "0.0.0.0" if "PORT" in os.environ else "127.0.0.1")
     debug = os.environ.get("FLASK_DEBUG", "0" if "PORT" in os.environ else "1") == "1"
     app.run(host=host, port=port, debug=debug)
+
 

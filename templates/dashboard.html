@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inorganic Chemistry: Introduction — AP Chemistry Performance Dashboard</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/reactions.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/quiz.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
+</head>
+<body class="dashboard-page">
+  {% include '_chrome.html' %}
+
+  <main id="main-content" class="main-container dashboard-main" tabindex="-1">
+    <!-- Top Control & Sync Bar -->
+    <section class="dash-top-bar" aria-label="Student Profile and Quick Actions">
+      <div class="dash-top-left">
+        <span class="dash-eyebrow" id="dash-user-eyebrow">
+          SAVED IN LOCAL &amp; CLOUD STORAGE (HAREN-AGENT-STORAGE) • {{ total_units }} UNITS • {{ total_questions }} QUESTIONS
+        </span>
+        <h2 class="dash-page-title">Student Performance Overview &amp; Visual Analytics</h2>
+      </div>
+      <div class="dash-top-actions">
+        <div class="dash-filter-group">
+          <label class="dash-filter-field">
+            <span>Filter Unit</span>
+            <select id="dash-global-unit-filter" class="select-input">
+              <option value="all">All 9 Units (Units 1–9)</option>
+              {% for u in units %}
+              <option value="{{ u.id }}">U{{ u.id }} · {{ u.title }}</option>
+              {% endfor %}
+            </select>
+          </label>
+          <label class="dash-filter-field">
+            <span>Filter Mode</span>
+            <select id="dash-global-mode-filter" class="select-input">
+              <option value="all">All Modes (Mode 1 &amp; Mode 2)</option>
+              <option value="batch">Mode 1: 10-Question Sets</option>
+              <option value="single">Mode 2: 1-by-1 Instant</option>
+            </select>
+          </label>
+        </div>
+        <a href="{{ url_for('quiz') }}" class="btn btn-primary" id="btn-dash-resume-primary">
+          ▶ Go to AP Practice Quiz
+        </a>
+      </div>
+    </section>
+
+    <!-- 5 KPI Summary Cards -->
+    <section class="dash-kpi-grid" id="dash-kpi-grid" aria-label="Key Performance Indicators"></section>
+
+    <!-- Active / Paused Sessions Table (Resume Where You Left Off) -->
+    <section class="dash-card" id="dash-paused-section" aria-label="Paused and In-Progress Quiz Sessions">
+      <div class="dash-card-head">
+        <div>
+          <span class="dash-section-tag">LEAVE &amp; RESUME SESSION TRACKER</span>
+          <h3>Active &amp; Paused Quiz Sessions (Resume Where You Left Off)</h3>
+        </div>
+        <span class="dash-card-meta" id="dash-paused-meta">Checking saved sessions…</span>
+      </div>
+      <div class="dash-table-scroll" id="dash-paused-table-wrap"></div>
+    </section>
+
+    <!-- Interactive SVG Charts Row 1: Accuracy Progression Line Chart + 570-Question Bank Donut Chart -->
+    <section class="dash-charts-row dash-charts-row-top" aria-label="Accuracy Progression and Question Bank Coverage Charts">
+      <article class="dash-card dash-chart-card">
+        <div class="dash-card-head">
+          <div>
+            <span class="dash-section-tag">CHRONOLOGICAL TREND GRAPH</span>
+            <h3>Accuracy &amp; AP Score Progression Over Attempts</h3>
+          </div>
+          <div class="chart-legend-inline">
+            <span class="legend-item"><i class="legend-swatch swatch-primary"></i> Attempt Score (%)</span>
+            <span class="legend-item"><i class="legend-swatch swatch-rolling"></i> 3-Attempt Rolling Avg</span>
+            <span class="legend-item"><i class="legend-swatch swatch-ap5"></i> AP 5 (≥75%)</span>
+          </div>
+        </div>
+        <div class="dash-svg-stage" id="chart-accuracy-trend"></div>
+      </article>
+
+      <article class="dash-card dash-chart-card">
+        <div class="dash-card-head">
+          <div>
+            <span class="dash-section-tag">QUESTION BANK BREAKDOWN</span>
+            <h3>{{ total_questions }}-Question Bank Mastery Distribution</h3>
+          </div>
+          <span class="dash-card-meta" id="chart-donut-meta">All 9 Units</span>
+        </div>
+        <div class="dash-donut-layout" id="chart-bank-donut"></div>
+      </article>
+    </section>
+
+    <!-- Interactive SVG Charts Row 2: Unit 1-9 Grouped Bar Chart + Unit Pace Horizontal Bar Chart -->
+    <section class="dash-charts-row dash-charts-row-bottom" aria-label="Unit Accuracy Comparison and Time Pace Charts">
+      <article class="dash-card dash-chart-card">
+        <div class="dash-card-head">
+          <div>
+            <span class="dash-section-tag">UNIT-BY-UNIT COMPARISON CHART</span>
+            <h3>Accuracy &amp; Question Bank Mastery by Unit (Units 1–9)</h3>
+          </div>
+          <div class="chart-legend-inline">
+            <span class="legend-item"><i class="legend-swatch swatch-m1"></i> Mode 1 Best (%)</span>
+            <span class="legend-item"><i class="legend-swatch swatch-m2"></i> Mode 2 Best (%)</span>
+            <span class="legend-item"><i class="legend-swatch swatch-bank"></i> Bank Mastery (%)</span>
+          </div>
+        </div>
+        <div class="dash-svg-stage" id="chart-unit-bars"></div>
+      </article>
+
+      <article class="dash-card dash-chart-card">
+        <div class="dash-card-head">
+          <div>
+            <span class="dash-section-tag">SPEED &amp; TIME PACE ANALYTICS</span>
+            <h3>Average Time Pace per Question by Unit (vs. 90s AP Target)</h3>
+          </div>
+          <span class="dash-card-meta">AP Multiple-Choice Benchmark: ≤ 90s / Q</span>
+        </div>
+        <div class="dash-svg-stage" id="chart-unit-pace"></div>
+      </article>
+    </section>
+
+    <!-- Structured Table 2: Complete Unit 1–9 & Mode Analytics Summary Table -->
+    <section class="dash-card" aria-label="Unit 1 to 9 Performance Summary Table">
+      <div class="dash-card-head">
+        <div>
+          <span class="dash-section-tag">UNIT &amp; MODE ANALYTICS TABLE</span>
+          <h3>Complete AP Chemistry Units 1–9 Performance &amp; Retake Table</h3>
+        </div>
+        <span class="dash-card-meta">Click Practice, Resume, or Retake for any Unit &amp; Mode</span>
+      </div>
+      <div class="dash-table-scroll" id="dash-unit-summary-table-wrap"></div>
+    </section>
+
+    <!-- Structured Table 3: Chronological Attempt History Log Table -->
+    <section class="dash-card" aria-label="Chronological Attempt History Log">
+      <div class="dash-card-head">
+        <div>
+          <span class="dash-section-tag">COMPLETE ATTEMPT LOG</span>
+          <h3>Chronological Attempt History Table</h3>
+        </div>
+        <span class="dash-card-meta" id="dash-attempts-count-label">0 attempts recorded</span>
+      </div>
+      <div class="dash-table-scroll" id="dash-attempts-table-wrap"></div>
+    </section>
+  </main>
+
+  <script id="quiz-payload" type="application/json">{{ payload | tojson }}</script>
+  <script src="{{ url_for('static', filename='js/user_sync.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/dashboard/dashboard_app.js') }}"></script>
+</body>
+</html>
